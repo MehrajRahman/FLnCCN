@@ -1,0 +1,264 @@
+## Scenario settings
+Scenario.name = TEST_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%_%%Group.bufferSize%%_%%Consumer.queryDistribution%%
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 1000
+Scenario.nrofHostGroups = 13
+
+## Interface-specific settings
+## Bluetooth
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 10
+## Wifi
+highspeedInterface.type = SimpleBroadcastInterface
+highspeedInterface.transmitSpeed = 10M
+highspeedInterface.transmitRange = 200
+
+## Group-specific settings
+Group.movementModel = ShortestPathMapBasedMovement
+Group.router = [CCNRouter;SprayAndWaitRouter;FirstContactRouter]
+CCNRouter.nrofCopies = 10
+## n/2 copy
+CCNRouter.binaryMode = true
+
+#[1M;2M;4M;8M;16M;32M;64M;128M]
+Group.bufferSize = [4M;8M;16M;32M;64M]
+Group.waitTime = 0, 120
+Group.nrofInterfaces = 1
+Group.interface1 = btInterface
+Group.speed = 0.5, 1.5
+#50, 100, 150, 200, 250, 300, 350, 400, 450, 500
+Group.msgTtl = [50;100;150;200;250;300;350]
+
+## Movement model settings
+#Movement model's pseudo random number generator (default = 0)
+#If simulation run in batch mode for 5 times, the movement model using the following seed
+#1; 3; 5; 7; 9; 11; 13; 2; 4; 6; 8; 10; 17; 19; 23; 29; 31; 61; 63; 47; 33; 35; 37; 39; 25; 37; 53; 59; 101; 103; 107; 109; 113; 127; 131; 137; 139; 149; 151; 157
+MovementModel.rngSeed = [13;17]
+MovementModel.worldSize = 4500, 3400
+MovementModel.warmup = 1000
+
+## Map based movement settings
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+
+## Producer Application
+Producer.type = CCN_application
+Producer.cacheCapacity = 5000
+Producer.mode = 2
+Producer.avaCache = 1,1
+Producer.maxCarriedContent = 1
+Producer.staticCacheCapacity = 50
+#{5, 10, 15, 20, 25, 30, 35, 40, 45, 50}
+Producer.staticCacheRange = 1,200
+Producer.seedStaticCache = 36
+Producer.enablePIT = true
+
+Group1.nrofApplications = 1
+Group1.application1 = Producer
+Group1.nrofHosts = 1
+Group1.movementModel = StationaryMovement
+Group1.nodeLocation = 2600,2200
+Group1.groupID = S
+Group1.interface1 = highspeedInterface
+Group1.bufferSize = 1G
+Group1.speed = 0,0
+
+Group2.nrofApplications = 1
+Group2.application1 = Producer
+Group2.nrofHosts = 1
+Group2.movementModel = StationaryMovement
+Group2.nodeLocation = 1300, 500
+Group2.groupID = S
+Group2.interface1 = highspeedInterface
+Group2.bufferSize = 1G
+Group2.speed = 0,0
+
+Group3.nrofApplications = 1
+Group3.application1 = Producer
+Group3.nrofHosts = 1
+Group3.movementModel = StationaryMovement
+Group3.nodeLocation = 2314,1283
+Group3.groupID = S
+Group3.bufferSize = 1G
+Group3.speed = 0,0
+Group3.interface1 = highspeedInterface
+
+Group4.nrofApplications = 1
+Group4.application1 = Producer
+Group4.nrofHosts = 1
+Group4.movementModel = StationaryMovement
+Group4.nodeLocation = 2800,750
+Group4.groupID = S
+Group4.interface1 = highspeedInterface
+Group4.bufferSize = 1G
+Group4.speed = 0,0
+
+Group5.nrofApplications = 1
+Group5.application1 = Producer
+Group5.nrofHosts = 11
+Group5.movementModel = StationaryMovement
+Group5.nodeLocation = 1400, 1600
+Group5.groupID = S
+Group5.interface1= highspeedInterface
+Group5.bufferSize = 1G
+Group5.speed = 0,0
+
+## Consumer Application
+Consumer.type = CCN_application
+Consumer.mode = 1
+Consumer.cacheCapacity = 5000
+Consumer.seedQuery = 12
+Consumer.interestSize = 50
+Consumer.interval = 100
+Consumer.numOfMsgToGenerate = 20
+Consumer.queryRange = 1,200
+#distribution type, 1 for random, 2 for ZipF
+#Consumer.queryDistribution = [2;1]
+Consumer.queryDistribution = 2
+Consumer.avaCache = 0,1
+Consumer.maxCarriedContent = 1
+Consumer.enablePIT = true
+
+Group6.nrofApplications = 1
+Group6.application1 = Consumer
+Group6.nrofHosts = 20
+Group6.groupID = p
+Group6.nrofInterfaces = 1
+Group6.interface1 = btInterface
+
+## Intermediate relay nodes
+Intermedia.type = CCN_application
+Intermedia.cacheCapacity = 500
+Intermedia.mode = 3
+Intermedia.avaCache = 0,1
+Intermedia.maxCarriedContent = 1
+Intermedia.enablePIT = true
+
+Group7.nrofApplications = 1
+Group7.application1 = Intermedia
+Group7.nrofHosts = 10
+Group7.groupID = c
+Group7.okMaps = 1
+Group7.speed = 2.7, 13.9
+Group7.nrofInterfaces = 1
+Group7.interface1 = btInterface
+
+Group8.nrofApplications = 1
+Group8.application1 = Intermedia
+Group8.nrofHosts = 10
+Group8.groupID = t
+Group8.bufferSize = 50M
+Group8.movementModel = MapRouteMovement
+Group8.routeFile = data/tram3.wkt
+Group8.routeType = 1
+Group8.waitTime = 10, 30
+Group8.speed = 2.5, 5
+Group8.nrofInterfaces = 1
+Group8.interface1 = btInterface
+
+Group9.nrofApplications = 1
+Group9.application1 = Intermedia
+Group9.nrofHosts = 20
+Group9.groupID = t
+Group9.bufferSize = 50M
+Group9.movementModel = MapRouteMovement
+Group9.routeFile = data/tram4.wkt
+Group9.routeType = 2
+Group9.waitTime = 10, 30
+Group9.speed = 7, 10
+Group9.nrofInterfaces = 1
+Group9.interface1 = btInterface
+
+Group10.nrofApplications = 1
+Group10.application1 = Intermedia
+Group10.nrofHosts = 10
+Group10.groupID = t
+Group10.bufferSize = 50M
+Group10.movementModel = MapRouteMovement
+Group10.routeFile = data/tram10.wkt
+Group10.routeType = 2
+Group10.waitTime = 10, 30
+Group10.speed = 7, 10
+Group10.nrofInterfaces = 1
+Group10.interface1 = btInterface
+
+Group11.nrofApplications = 1
+Group11.application1 = Consumer
+Group11.nrofHosts = 10
+Group11.groupID = w
+Group11.nrofInterfaces = 1
+Group11.interface1 = btInterface
+
+Group12.nrofApplications = 1
+Group12.application1 = Producer
+Group12.nrofHosts = 15
+Group12.groupID = p
+Group12.nrofInterfaces = 1
+Group12.interface1 = btInterface
+
+## for test
+Group13.nrofApplications = 1
+Group13.application1 = Producer
+Group13.nrofHosts = 2
+Group13.groupID = s
+Group13.nrofInterfaces = 1
+Group13.interface1 = highspeedInterface
+Group13.nodeLocation = 2100,1650
+Group13.movementModel = StationaryMovement
+
+Group14.nrofApplications = 1
+Group14.application1 = Producer
+Group14.nrofHosts = 11
+Group14.movementModel = StationaryMovement
+Group14.nodeLocation = 1400, 1600
+Group14.groupID = S
+Group14.interface1= highspeedInterface
+Group14.bufferSize = 1G
+Group14.speed = 0,0
+
+
+
+## Reports
+
+Report.nrofReports = 2
+Report.report1 = MessageStatsReport
+Report.report2 = CCNApplicationReport
+Report.warmup = 0
+Report.reportDir = reports/
+
+## Optimization settings
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true
+
+## GUI settings
+GUI.UnderlayImage.fileName = data/helsinki_underlay.png
+GUI.UnderlayImage.offset = 64, 20
+GUI.UnderlayImage.scale = 4.75
+GUI.UnderlayImage.rotate = -0.015
+GUI.EventLogPanel.nrofEvents = 100
+
+// add default settings
+## Message creation parameters
+# How many event generators
+Events.nrof = 1
+# Class of the first event generator
+Events1.class = MessageEventGenerator
+# (following settings are specific for the MessageEventGenerator class)
+# Creation interval in seconds (one new message every 25 to 35 seconds)
+Events1.interval = 25,35
+# Message sizes (500kB - 1MB)
+Events1.size = 500k,1M
+# range of message source/destination addresses
+Events1.hosts = 0,110
+# Message ID prefix
+Events1.prefix = M
+
+## Default settings for some routers settings
+ProphetRouter.secondsInTimeUnit = 30
+SprayAndWaitRouter.nrofCopies = 6
+SprayAndWaitRouter.binaryMode = true

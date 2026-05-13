@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/DTNConsoleConnection.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ECLA.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/junit-4.10.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
