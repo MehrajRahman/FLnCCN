@@ -1,0 +1,23 @@
+## Condition B — CCN no cache, 100 nodes, Shortest Path Map Based Movement
+Scenario.name = FL_B_CCN_NoCache_100_SPMBM
+
+Group.router = CCNRouter
+Group.movementModel = ShortestPathMapBasedMovement
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+Aggregator.avaCache = 0,0
+FLWorker.avaCache = 0,0
+Aggregator.flTotalNodes = 99
+FLWorker.flTotalNodes = 99
+Group2.nrofHosts = 99
+CCNApplicationReport.flTotalNodes = 99
+
+## SPMBM needs Helsinki map world size
+MovementModel.worldSize = 4500, 3400
+Group1.nodeLocation = 2250, 1700
+Relay.flTotalNodes = 69
+Group3.nrofHosts = 30
+Relay.avaCache = 0,0

@@ -1,0 +1,13 @@
+## Condition A — Epidemic, 100 nodes, Random Waypoint
+Scenario.name = FL_A_Epidemic_100_RWP
+
+Group.router = EpidemicRouter
+Group.movementModel = RandomWaypoint
+Aggregator.avaCache = 0,0
+FLWorker.avaCache = 0,0
+Aggregator.flTotalNodes = 69
+FLWorker.flTotalNodes = 69
+Group2.nrofHosts = 69
+CCNApplicationReport.flTotalNodes = 69
+Relay.flTotalNodes = 69
+Group3.nrofHosts = 30

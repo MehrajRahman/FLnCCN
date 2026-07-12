@@ -9,10 +9,37 @@ import java.util.*;
 import core.Application;
 import core.ApplicationListener;
 import core.DTNHost;
+import core.Settings;
 import core.SimClock;
 import util.ContentDelivery;
 
 public class CCNApplicationReport extends Report implements ApplicationListener {
+
+	// ── FL per-round settings (read from CCNApplicationReport.flTotalNodes etc.) ──
+	private int flTotalNodes  = 49;
+	private int flTotalRounds = 10;
+
+	// ── FL per-round accumulators ─────────────────────────────────────────────────
+	private Map<Integer, Integer> flRoundDeliveryCount  = new HashMap<>();
+	private Map<Integer, Double>  flRoundCompletionTime = new HashMap<>();
+	private Map<Integer, Integer> flRoundCacheHits      = new HashMap<>();
+	private int flCurrentRoundCacheHits = 0;
+
+	// ── FL provenance: how each delivered update was satisfied ─────────────────────
+	//   from-cache  = served by a node that is NOT the original producer
+	//   latency split lets us compute a like-for-like cache vs origin comparison
+	private Map<Integer, Integer> flRoundUpdatesFromCache = new HashMap<>();
+	private Map<Integer, Double>  flRoundCacheLatencySum  = new HashMap<>();
+	private Map<Integer, Integer> flRoundCacheLatencyCnt  = new HashMap<>();
+	private Map<Integer, Double>  flRoundOriginLatencySum = new HashMap<>();
+	private Map<Integer, Integer> flRoundOriginLatencyCnt = new HashMap<>();
+
+	public CCNApplicationReport() {
+		super();
+		Settings s = getSettings();
+		if (s.contains("flTotalNodes"))  this.flTotalNodes  = s.getInt("flTotalNodes");
+		if (s.contains("flTotalRounds")) this.flTotalRounds = s.getInt("flTotalRounds");
+	}
 
 	private int oppo_cache_hit=0;
 	private int oppo_cache_miss=0;
@@ -120,6 +147,42 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 
 	public void gotEvent(String event, Object params, Application app,
 			DTNHost host) {
+		if (event.equals("FLRoundComplete")) {
+			if (params instanceof Object[]) {
+				Object[] data  = (Object[]) params;
+				int    round    = (Integer) data[0];
+				int    delivered = (Integer) data[1];
+				double latency  = (Double)  data[2];
+				flRoundDeliveryCount.put(round, delivered);
+				flRoundCompletionTime.put(round, latency);
+				flRoundCacheHits.put(round, flCurrentRoundCacheHits);
+				flCurrentRoundCacheHits = 0;
+			}
+		}
+
+		if (event.equals("FLCacheHit")) {
+			flCurrentRoundCacheHits++;
+		}
+
+		if (event.equals("FLUpdateServed") && params instanceof Object[]) {
+			Object[] d        = (Object[]) params;
+			int     round     = (Integer) d[0];
+			boolean fromCache = (Boolean) d[1];
+			double  latency   = (Double)  d[2];
+			if (fromCache) {
+				flRoundUpdatesFromCache.merge(round, 1, Integer::sum);
+			}
+			if (latency >= 0) {
+				if (fromCache) {
+					flRoundCacheLatencySum.merge(round, latency, Double::sum);
+					flRoundCacheLatencyCnt.merge(round, 1, Integer::sum);
+				} else {
+					flRoundOriginLatencySum.merge(round, latency, Double::sum);
+					flRoundOriginLatencyCnt.merge(round, 1, Integer::sum);
+				}
+			}
+		}
+
 		if (event.equals("oppoCacheHit")) {
 			this.oppo_cache_hit++;
 			this.total_cache_hits++;
@@ -306,6 +369,38 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 			;
 
 		write(statsText);
+
+		// ── FL Per-Round CSV output ───────────────────────────────────────────
+		if (!flRoundDeliveryCount.isEmpty()) {
+			write("\n=== FL Per-Round Metrics ===");
+			// updates_collected  : distinct workers whose update reached the aggregator
+			//                      (the round completes at flThreshold by design, so this
+			//                      is a transport-completion count, NOT a learning metric)
+			// completion_lat_s   : sim-seconds from round start until threshold reached
+			// served_from_cache  : updates satisfied by an in-network cache, not the origin
+			// cache_served_frac  : served_from_cache / updates_collected, bounded [0,1]
+			// cache_lat_s/origin_lat_s : mean interest->response latency, split by provenance
+			write("round,updates_collected,completion_lat_s,served_from_cache,"
+			    + "cache_served_frac,cache_lat_s,origin_lat_s");
+			for (int r = 1; r <= flTotalRounds; r++) {
+				int    delivered  = flRoundDeliveryCount.getOrDefault(r, 0);
+				double latency    = flRoundCompletionTime.getOrDefault(r, -1.0);
+				int    fromCache  = flRoundUpdatesFromCache.getOrDefault(r, 0);
+				double cacheFrac  = delivered > 0
+				                    ? (double) fromCache / delivered : 0.0;
+				double cacheLat   = flRoundCacheLatencyCnt.getOrDefault(r, 0) > 0
+				    ? flRoundCacheLatencySum.get(r) / flRoundCacheLatencyCnt.get(r) : -1.0;
+				double originLat  = flRoundOriginLatencyCnt.getOrDefault(r, 0) > 0
+				    ? flRoundOriginLatencySum.get(r) / flRoundOriginLatencyCnt.get(r) : -1.0;
+				write(r + "," + delivered + ","
+				    + String.format("%.1f", latency) + ","
+				    + fromCache + ","
+				    + String.format("%.3f", cacheFrac) + ","
+				    + String.format("%.1f", cacheLat) + ","
+				    + String.format("%.1f", originLat));
+			}
+		}
+
 		super.done();
 	}
 

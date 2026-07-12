@@ -1,0 +1,31 @@
+WebApp stats for scenario FL_C_CCN_Cache_100_SPMBM
+sim_time: 14400.0000
+
+oppo_cache_hit: 579
+oppo_cache_miss: 22755
+drop_list:  0
+drop_pit:  934
+drop_nonce:  0
+query_count: 573
+duplicated_query: 0
+static_cache_hit: 474
+static_cache_miss: 22860
+response_count: 252
+average_interval: 2751
+caching_gain_index: 80.69
+retrieval_latency_reduction: -180.74
+interest_satisfaction_rate: 73.04
+dissemination_efficiency: 0.000160
+
+=== FL Per-Round Metrics ===
+round,delivery_ratio,latency_seconds,cache_hit_count,cache_hit_rate
+1,0.507,2578.9,103,2.943
+2,0.507,2987.7,169,4.829
+3,0.507,2717.6,186,5.314
+4,0.507,3446.1,227,6.486
+5,0.000,-1.0,0,0.000
+6,0.000,-1.0,0,0.000
+7,0.000,-1.0,0,0.000
+8,0.000,-1.0,0,0.000
+9,0.000,-1.0,0,0.000
+10,0.000,-1.0,0,0.000

@@ -80,7 +80,7 @@ public class CCNRouter extends ActiveRouter {
 			{
 				nrofCopies = 2;
 			}
-			System.out.println("Type:"+ type + " msgID=" + id + " from " + from + " nrofCopies:" + nrofCopies);
+//			System.out.println("Type:"+ type + " msgID=" + id + " from " + from + " nrofCopies:" + nrofCopies);
 			
 		}
 		
@@ -151,7 +151,7 @@ public class CCNRouter extends ActiveRouter {
 			//String hostsToString = (String)m.getProperty("hostsTo");
 			
 					
-			//System.out.println("hosts to: " +hostsToString );
+//			//System.out.println("hosts to: " +hostsToString );
 		}
 		
 		return list;

@@ -1,0 +1,31 @@
+WebApp stats for scenario FL_A_Epidemic_50_RWP
+sim_time: 14400.0000
+
+oppo_cache_hit: 1281
+oppo_cache_miss: 3819
+drop_list:  0
+drop_pit:  0
+drop_nonce:  0
+query_count: 340
+duplicated_query: 0
+static_cache_hit: 1621
+static_cache_miss: 15039
+response_count: 309
+average_interval: 570
+caching_gain_index: 90.38
+retrieval_latency_reduction: -461.12
+interest_satisfaction_rate: 90.88
+dissemination_efficiency: 0.001591
+
+=== FL Per-Round Metrics ===
+round,delivery_ratio,latency_seconds,cache_hit_count,cache_hit_rate
+1,0.500,724.9,76,4.471
+2,0.500,318.1,74,4.353
+3,0.500,331.0,85,5.000
+4,0.500,469.2,73,4.294
+5,0.500,564.6,130,7.647
+6,0.500,512.8,175,10.294
+7,0.500,742.3,120,7.059
+8,0.500,561.3,126,7.412
+9,0.500,773.4,150,8.824
+10,0.500,816.0,201,11.824

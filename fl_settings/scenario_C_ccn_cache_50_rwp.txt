@@ -1,0 +1,7 @@
+## Condition C — CCN with cache, 50 nodes, Random Waypoint
+Scenario.name = FL_C_CCN_Cache_50_RWP
+
+Group.router = CCNRouter
+Group.movementModel = RandomWaypoint
+Aggregator.avaCache = 0,1
+FLWorker.avaCache = 1,1

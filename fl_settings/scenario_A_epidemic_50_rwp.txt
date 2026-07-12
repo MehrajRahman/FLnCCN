@@ -1,0 +1,8 @@
+## Condition A — Epidemic, 50 nodes, Random Waypoint
+## Inherits fl_base_50.txt via: java -jar one.jar fl_settings/fl_base_50.txt fl_settings/scenario_A_epidemic_50_rwp.txt
+Scenario.name = FL_A_Epidemic_50_RWP
+
+Group.router = EpidemicRouter
+Group.movementModel = RandomWaypoint
+Aggregator.avaCache = 0,0
+FLWorker.avaCache = 0,0

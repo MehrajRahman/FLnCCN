@@ -21,9 +21,11 @@ import core.World;
 //
 import core.Connection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * @author RUI and Hasan
@@ -92,7 +94,13 @@ public class CCN_application extends Application {
 	private int 		query_range_Max = 100;
 	private int 		max_carried_content = 5;
 	public static final String MAX_CARRIED_CONTENT = "maxCarriedContent";
-	
+
+	/** Federated Learning settings */
+	public static final String FL_MODE         = "flMode";
+	public static final String FL_TOTAL_ROUNDS = "flTotalRounds";
+	public static final String FL_TOTAL_NODES  = "flTotalNodes";
+	public static final String FL_THRESHOLD    = "flThreshold";
+
 	/** query record: first integer is the query_key, the second is to monitor does this query_key get response or not (1 for yes, 0 for no) */
 	private HashMap<Integer, Integer> query_record;
 	
@@ -136,6 +144,16 @@ public class CCN_application extends Application {
 	private List<String> procedMsgList = new ArrayList<String>();
 	
 	
+	// ── Federated Learning layer ─────────────────────────────────────
+	private boolean      flMode            = false;
+	private int          flTotalRounds     = 10;
+	private int          flTotalNodes      = 49;
+	private double       flThreshold       = 0.70;
+	/** Aggregator (mode=1) per-round state */
+	private int          currentRound      = 1;
+	private Set<Integer> receivedThisRound = new HashSet<Integer>();
+	private double       flRoundStartTime  = -1.0;
+
 	/** Zipf destribution parameters */
 	private static final    String queryDistributionString = "queryDistribution"; //1 for normal random query, 2 for ZipF distribution
 	private int				queryDistribution = 1;	// 1 for default
@@ -155,12 +173,20 @@ public class CCN_application extends Application {
 	public static void reset()
 	{
 	}
+
+	/**
+	 * Encodes FL round + producer node ID into a single integer content key.
+	 * Example: round=3, nodeID=12 → 3012
+	 */
+	private int getFLContentKey(int round, int nodeID) {
+		return (round * 1000) + nodeID;
+	}
 	/** 
 	 * @param s	Settings to use for initializing the application.
 	 */
 	public CCN_application(Settings s) {
 		//test code
-		System.out.println("Creating application from setting only once");
+//		System.out.println("Creating application from setting only once");
 		
 		if (s.contains(CCN_PASSIVE)){
 			this.passive = s.getBoolean(CCN_PASSIVE);
@@ -279,7 +305,13 @@ public class CCN_application extends Application {
 			createContentLadder();
 			createPopularContent();
 		}
-		
+
+		/** Federated Learning settings */
+		if (s.contains(FL_MODE))          this.flMode         = s.getBoolean(FL_MODE);
+		if (s.contains(FL_TOTAL_ROUNDS))  this.flTotalRounds  = s.getInt(FL_TOTAL_ROUNDS);
+		if (s.contains(FL_TOTAL_NODES))   this.flTotalNodes   = s.getInt(FL_TOTAL_NODES);
+		if (s.contains(FL_THRESHOLD))     this.flThreshold    = s.getDouble(FL_THRESHOLD);
+
 		super.setAppID(APP_ID);
 	}
 
@@ -295,6 +327,7 @@ public class CCN_application extends Application {
 		
 	/** test code */
 	public void print_oppo_cache(DTNHost host){
+		if (this.oppo_cache == null) return;
 		LRUCache print_cache = new LRUCache(this.oppo_cache);
 	}
 	
@@ -305,8 +338,20 @@ public class CCN_application extends Application {
 			this.static_cache 
 			= new HashMap<Integer, String>();
 		}
-		
-		System.out.println("Init static cache for host "+ h +  "if value is " + true_static_cache);
+
+		// ── FL mode: pre-populate Producer cache with model updates for all rounds
+		if (flMode && mode == 2) {
+			int producerID = Integer.parseInt(h.toString().substring(1));
+			for (int r = 1; r <= flTotalRounds; r++) {
+				int key = getFLContentKey(r, producerID);
+				static_cache.put(key, "flupdate_r" + r + "_n" + producerID);
+				sendEventToListeners("ContentAvailable", String.valueOf(key), h);
+			}
+			// FL: initialized cache for producer (debug suppressed)
+			return;
+		}
+
+//		System.out.println("Init static cache for host "+ h +  "if value is " + true_static_cache);
 		if(true_static_cache >= 1){
 			/** initialize static_cache */
 			//get the num of the host since the host num starting from 0
@@ -315,14 +360,14 @@ public class CCN_application extends Application {
 			int num_of_hosts = SimScenario.getInstance().getWorld().getHosts().size();
 			//calculate the range of values for every host
 			int range = (static_cache_value_Max - static_cache_value_Min)/num_of_hosts + 1;
-			System.out.println("Init static cache: "+ num_of_hosts + " why range: "+ range);
+//			System.out.println("Init static cache: "+ num_of_hosts + " why range: "+ range);
 			//distribution setting: all 1-20
 			int max_range = static_cache_value_Max;
 			int min_range = static_cache_value_Min;
 			num_of_hosts = 1;
 			
 			//test code
-			System.out.println("Host:  range max: + mim " + max_range + " " + min_range);
+//			System.out.println("Host:  range max: + mim " + max_range + " " + min_range);
 			
 			Random rng_static_cache = new Random(this.seed_for_create_static_cache + seed_from_host);
 			
@@ -338,7 +383,7 @@ public class CCN_application extends Application {
 
 			}
 			//test code
-			System.out.println();			
+//			System.out.println();			
 		}
 	}
 	
@@ -397,17 +442,26 @@ public class CCN_application extends Application {
 		this.popularContent = a.getPopularContent();
 		this.queryDistribution = a.getQueryDistribution();
 		this.numOfPopuCont = a.getNumOfPopuCont();
+
+		// ── Federated Learning fields ─────────────────────────────────────
+		this.flMode            = a.flMode;
+		this.flTotalRounds     = a.flTotalRounds;
+		this.flTotalNodes      = a.flTotalNodes;
+		this.flThreshold       = a.flThreshold;
+		this.currentRound      = 1;
+		this.receivedThisRound = new HashSet<Integer>();
+		this.flRoundStartTime  = -1.0;
 	}
 	/** 
 	 * @param host	host for which PIT will be printed
 	 */
 
 	void print_PIT(DTNHost Host){
-		System.out.print(Host+ "# ");
+//		System.out.print(Host+ "# ");
 		for(Integer query_key : this.PIT.keySet()){
-			System.out.print(query_key + ":" + this.PIT.get(query_key).getHostToSendList() + ", ");
+//			System.out.print(query_key + ":" + this.PIT.get(query_key).getHostToSendList() + ", ");
 		}
-		System.out.println();
+//		System.out.println();
 	}
 	
 	
@@ -422,7 +476,7 @@ public class CCN_application extends Application {
 	public Message handle(Message msg, DTNHost host) {
 		String type = (String)msg.getProperty("type");
 
-		System.out.println("in message handle : " + host);
+//		System.out.println("in message handle : " + host);
 
 		if(type == null) return msg; //Not a valid msg
 		
@@ -449,7 +503,7 @@ public class CCN_application extends Application {
 	
 		
 		//test code
-	//	System.out.println(host + ": got a [" + type + "] msg = [" + msg.getProperty("queryMsg") + "] id = [" + msg.toString() + "] from " + msg.getFrom() + " to " + msg.getTo() + " visited hosts:" + " total:" + msg.getHopCount() + msg.getHops() + " hostsTo= " + getHostsTo(msg));
+//	//	System.out.println(host + ": got a [" + type + "] msg = [" + msg.getProperty("queryMsg") + "] id = [" + msg.toString() + "] from " + msg.getFrom() + " to " + msg.getTo() + " visited hosts:" + " total:" + msg.getHopCount() + msg.getHops() + " hostsTo= " + getHostsTo(msg));
 		
 
 		print_oppo_cache(host);
@@ -459,17 +513,54 @@ public class CCN_application extends Application {
 			String query_key_of_response = (String)msg.getProperty("queryMsg");
 
 			if( msg.getProperty("content") == null){
-				//System.out.println(host + ": got an invalid response msg");
+//				//System.out.println(host + ": got an invalid response msg");
 			}
 			else if(this.mode == 1){
 				int response_key_in_int = Integer.parseInt(query_key_of_response);
 				if(this.query_record == null){
 					query_record = new HashMap<Integer, Integer>();
 				}
+				// capture send-time before the record is removed, for per-update latency
+				Integer flSentAt = this.query_record.get(response_key_in_int);
 				if(this.query_record.get( response_key_in_int) != null && this.query_record.get( response_key_in_int ) != 1){
 					super.sendEventToListeners("OriginalGotResponse", query_key_of_response, host);
 //					this.query_record.put(response_key_in_int, 1);
-					this.query_record.remove(response_key_in_int);					
+					this.query_record.remove(response_key_in_int);
+
+					// ── FL round tracking ─────────────────────────────────────────
+					if (flMode) {
+						Object isFLObj = msg.getProperty("isFL");
+						if (isFLObj != null && (Boolean) isFLObj) {
+							Object flRoundObj    = msg.getProperty("flRound");
+							Object flProducerObj = msg.getProperty("flProducerID");
+							if (flRoundObj != null && flProducerObj != null) {
+								int flRound    = (Integer) flRoundObj;
+								int producerID = (Integer) flProducerObj;
+								if (flRound == currentRound && !receivedThisRound.contains(producerID)) {
+									receivedThisRound.add(producerID);
+									super.sendEventToListeners("FLUpdateReceived",
+										new int[]{currentRound, producerID}, host);
+									// provenance + per-update latency (cache vs origin)
+									Object fromCacheObj = msg.getProperty("flFromCache");
+									boolean fromCache = (fromCacheObj != null && (Boolean) fromCacheObj);
+									double retrievalLatency = (flSentAt != null)
+										? (SimClock.getTime() - flSentAt) : -1.0;
+									super.sendEventToListeners("FLUpdateServed",
+										new Object[]{currentRound, Boolean.valueOf(fromCache),
+										             Double.valueOf(retrievalLatency)}, host);
+									double ratio = (double) receivedThisRound.size() / flTotalNodes;
+									if (ratio >= flThreshold) {
+										double latency = SimClock.getTime() - flRoundStartTime;
+										super.sendEventToListeners("FLRoundComplete",
+											new Object[]{currentRound, receivedThisRound.size(), latency}, host);
+										currentRound++;
+										receivedThisRound.clear();
+										flRoundStartTime = -1.0;
+									}
+								}
+							}
+						}
+					}
 				}			
 			}
 			//update hostsTo property
@@ -556,7 +647,9 @@ public class CCN_application extends Application {
 			}
 			
 			//add the response to the oppo cache
-			oppo_cache.set( request_in_int, (String)msg.getProperty("content") );
+			if (oppo_cache != null) {
+				oppo_cache.set( request_in_int, (String)msg.getProperty("content") );
+			}
 			
 			//if I am an intermedia node, i should add the response to my static cache also
 			if(this.mode == 3 && true_static_cache == 1){
@@ -569,6 +662,10 @@ public class CCN_application extends Application {
 
 		/** current host is the destination host, check both the static and oppo cache */
 		if(type.equalsIgnoreCase("query_ad") && msg.getFrom() != host){
+
+			// Ensure caches are initialized
+			if (this.static_cache == null) Ini_static_cache(host);
+			if (this.oppo_cache == null)   Ini_oppo_cache();
 
 			String query_key = (String)msg.getProperty("queryMsg");
 			int request_in_int = Integer.parseInt( query_key );
@@ -593,7 +690,7 @@ public class CCN_application extends Application {
 					sendEventToListeners("CacheHitLatency", cache_latency, host);
 
 					//test code
-				//	System.out.println(host + ":[oppo hit] for [" + query_key +  "] visited hosts: " + msg.getHops());
+//				//	System.out.println(host + ":[oppo hit] for [" + query_key +  "] visited hosts: " + msg.getHops());
 				}
 			}
 
@@ -608,9 +705,15 @@ public class CCN_application extends Application {
 // add new CacheHitLatency
 					double cache_latency = SimClock.getTime() - query_start_time;
 					sendEventToListeners("CacheHitLatency", cache_latency, host);
-
-					//test code
-					System.out.println(host + ":[static hit] for [" + query_key +  "] visited hosts: " + msg.getHops());
+				}
+			} else if (flMode && mode == 2 && static_cache != null) {
+				// FL workers always serve their own pre-populated updates, even with avaCache=0
+				String val = static_cache.get(request_in_int);
+				if (val != null) {
+					retrieved_value_from_static = val;
+					super.sendEventToListeners("staticCacheHit", null, host);
+				} else {
+					super.sendEventToListeners("staticCacheMiss", null, host);
 				}
 			}
 
@@ -635,12 +738,29 @@ public class CCN_application extends Application {
 					host.createNewMessage(msg);
 
 					//test code
-				//	System.out.println(host + ": I don't have the content of [" + query_key + "]. I will retransmit it to " + host_to_send + ". It visits " + msg.getHops());
+//				//	System.out.println(host + ": I don't have the content of [" + query_key + "]. I will retransmit it to " + host_to_send + ". It visits " + msg.getHops());
 				}
 				if(flag_send){
 					response_msg.updateProperty("type", "queryResponse");
 					response_msg.addProperty("queryMsg", (String)msg.getProperty("queryMsg"));
 					response_msg.setAppID(APP_ID);
+
+					// ── FL: tag response with provenance ────────────────────────────
+					if (flMode && msg.getProperty("isFL") != null) {
+						int key        = Integer.parseInt((String) msg.getProperty("queryMsg"));
+						int producerID = key % 1000;
+						int flRound    = key / 1000;
+						response_msg.addProperty("isFL",         Boolean.TRUE);
+						response_msg.addProperty("flRound",      flRound);
+						response_msg.addProperty("flProducerID", producerID);
+						// served from cache iff this node is NOT the original producer
+						boolean servedFromCache = (host.getAddress() != producerID);
+						response_msg.addProperty("flFromCache", Boolean.valueOf(servedFromCache));
+						if (servedFromCache &&
+							(!retrieved_value_from_oppo.isEmpty() || !retrieved_value_from_static.isEmpty())) {
+							super.sendEventToListeners("FLCacheHit", flRound, host);
+						}
+					}
 
 					String query_key2=(String) msg.getProperty("queryMsg");
 					sendEventToListeners("ContentCreated", query_key2, host);
@@ -667,7 +787,7 @@ public class CCN_application extends Application {
 						this.PIT.put(request_in_int, temp_hostToSend);
 
 						//test code
-						System.out.println(host + ": add new entry, PIT size:" + PIT.size());
+//						System.out.println(host + ": add new entry, PIT size:" + PIT.size());
 						print_PIT(host);
 					}
 					else{
@@ -677,7 +797,7 @@ public class CCN_application extends Application {
 						this.PIT.put(request_in_int, temp_hostToSend);
 
 						//test code
-						System.out.println(host + ": update entry, PIT size:" + PIT.size());
+//						System.out.println(host + ": update entry, PIT size:" + PIT.size());
 				//		print_PIT(host);
 						super.sendEventToListeners("forwardingStopListPIT", null, host);
 						return null;
@@ -696,6 +816,19 @@ public class CCN_application extends Application {
 					response_msg.updateProperty("type", "queryResponse");
 					response_msg.addProperty("queryMsg", (String)msg.getProperty("queryMsg"));
 					response_msg.setAppID(APP_ID);
+
+					// ── FL: tag response with provenance (intermediate cache hit) ───
+					if (flMode && msg.getProperty("isFL") != null) {
+						int key        = Integer.parseInt((String) msg.getProperty("queryMsg"));
+						int producerID = key % 1000;
+						int flRound    = key / 1000;
+						response_msg.addProperty("isFL",         Boolean.TRUE);
+						response_msg.addProperty("flRound",      flRound);
+						response_msg.addProperty("flProducerID", producerID);
+						// Intermediate node always serves from cache (not original source)
+						response_msg.addProperty("flFromCache", Boolean.TRUE);
+						super.sendEventToListeners("FLCacheHit", flRound, host);
+					}
 
 					String query_key3=(String) msg.getProperty("queryMsg");
 					sendEventToListeners("ContentCreated", query_key3, host);
@@ -721,7 +854,7 @@ public class CCN_application extends Application {
 		if(this.rng == null){
 			this.rng = new Random( this.seed + 2 * Integer.parseInt(host.toString().substring(1)) );
 			//test code;
-			//System.out.println(host + ": rng empty ");
+//			//System.out.println(host + ": rng empty ");
 		}
 		
 		World w = SimScenario.getInstance().getWorld();
@@ -729,7 +862,7 @@ public class CCN_application extends Application {
 		do{
 			destaddr = this.rng.nextInt(w.getHosts().size());			
 			//test code;
-			//System.out.println(host + ": generating destaddr = " + destaddr);
+//			//System.out.println(host + ": generating destaddr = " + destaddr);
 		}while(w.getNodeByAddress(destaddr) == host);
 		
 		return w.getNodeByAddress(destaddr);
@@ -788,6 +921,50 @@ public class CCN_application extends Application {
 		if(this.mode == 1){
 			/** only consumers generate msg */
 			double curTime = SimClock.getTime();
+
+			// ── FL Aggregator: send Interests for all nodes in current round ─────
+			if (this.flMode) {
+				if (currentRound > flTotalRounds) return;
+				if (flRoundStartTime < 0) flRoundStartTime = curTime;
+				if (curTime - this.lastPing >= this.interval) {
+					if (this.static_cache == null) Ini_static_cache(host);
+					if (this.oppo_cache == null)   Ini_oppo_cache();
+					if (this.query_record == null)  query_record = new HashMap<Integer, Integer>();
+					for (int nodeID = 1; nodeID <= flTotalNodes; nodeID++) {
+						if (!receivedThisRound.contains(nodeID)) {
+							int contentKey = getFLContentKey(currentRound, nodeID);
+							Integer sentAt = query_record.get(contentKey);
+							// Send if never queried, or retry after ~2000s if no response
+							if (sentAt == null || (SimClock.getIntTime() - sentAt) > 2000) {
+								// Address Interest directly to the target worker (address = nodeID)
+								// This avoids Interest-redirect chain explosion with Epidemic routing
+								List<DTNHost> allHosts = SimScenario.getInstance().getWorld().getHosts();
+								DTNHost dest = null;
+								for (DTNHost h : allHosts) {
+									if (h.getAddress() == nodeID) { dest = h; break; }
+								}
+								if (dest == null) dest = randomHost(host);
+								Message m = new Message(host, dest,
+									"query_ad" + SimClock.getIntTime() + "-" + host.getAddress() + "-n" + nodeID,
+									getInterestSize());
+								m.addProperty("type",          "query_ad");
+								m.addProperty("queryMsg",      String.valueOf(contentKey));
+								m.addProperty("isFL",          Boolean.TRUE);
+								m.addProperty("flRound",       currentRound);
+								m.addProperty("requestedNode", nodeID);
+								m.addProperty("startTime",     SimClock.getTime());
+								m.setAppID(APP_ID);
+								host.createNewMessage(m);
+								super.sendEventToListeners("SentQuery", String.valueOf(contentKey), host);
+								query_record.put(contentKey, SimClock.getIntTime());
+							}
+						}
+					}
+					this.lastPing = curTime;
+				}
+				return;
+			}
+
 			if (curTime - this.lastPing >= this.interval) {
 				if( curGenerated < num_of_msg_to_generate){
 					curGenerated ++;
@@ -842,14 +1019,14 @@ public class CCN_application extends Application {
 						if(static_cache != null){
 							if( static_cache.get(query_key) != null && !static_cache.get(query_key).isEmpty() ){
 								flag_for_reg = true;
-								//System.out.println("static true:" + static_cache.get(query_key));
+//								//System.out.println("static true:" + static_cache.get(query_key));
 							}
 						}
 						
 						if(oppo_cache != null){
 							if( oppo_cache.get(query_key) != null && !oppo_cache.get(query_key).isEmpty() ){
 								flag_for_reg = true;
-								//System.out.println("oppo true:" + oppo_cache.get(query_key));
+//								//System.out.println("oppo true:" + oppo_cache.get(query_key));
 							}
 						}
 						
@@ -872,7 +1049,7 @@ public class CCN_application extends Application {
 								
 						super.sendEventToListeners("SentQuery", (String)m.getProperty("queryMsg"), host);
 						this.query_record.put(query_key, 0);
-					//	System.out.println(host + " query for [" + (String)m.getProperty("queryMsg") + "] to random host:" + random_host  + " query record " + this.query_record);
+//					//	System.out.println(host + " query for [" + (String)m.getProperty("queryMsg") + "] to random host:" + random_host  + " query record " + this.query_record);
 					}
 					else{
 						super.sendEventToListeners("SentDuplicatedQuery", null, host);
@@ -1073,7 +1250,7 @@ public class CCN_application extends Application {
 	}
 	
 	public void print(Object content){
-		System.out.println(content);
+//		System.out.println(content);
 	}
 	
 	public boolean checkProcessedMsgList(Message msg){
@@ -1121,20 +1298,20 @@ public class CCN_application extends Application {
 	
 	public void createPopularContent(){
 		if(numOfPopuCont <= 0){
-		//	System.out.println("numOfPopuCont not set yet.");
+//		//	System.out.println("numOfPopuCont not set yet.");
 			return;
 		}
 		
-	//	System.out.println("Generating popular content list");
+//	//	System.out.println("Generating popular content list");
 		
 		popularContent = new int[numOfPopuCont];
 		Random content_generator = new Random(seedForCreatePopuContent);
 		
 		for(int i=0; i < numOfPopuCont; i++){
 			popularContent[i] = content_generator.nextInt(query_range_Max - query_range_Min) + query_range_Min;			
-		//	System.out.print(popularContent[i] + " ");
+//		//	System.out.print(popularContent[i] + " ");
 		}
-		System.out.println("\n Done Generating popular content list");
+//		System.out.println("\n Done Generating popular content list");
 	}
 	
 	
@@ -1189,7 +1366,7 @@ public class CCN_application extends Application {
 		}while(contentRank < 0);
 		
 		if(contentRank > numOfPopuCont){
-		//	System.out.println("Looking for unpopular content");
+//		//	System.out.println("Looking for unpopular content");
 		}
 		return popularContent[contentRank];
 	}

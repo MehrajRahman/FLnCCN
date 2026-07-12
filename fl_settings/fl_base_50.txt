@@ -1,0 +1,117 @@
+## FL Base Settings -- 50 nodes (1 aggregator + 34 FL workers + 15 relay nodes)
+## Explicitly overrides all group-specific settings from ccn_default_settings.txt
+
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+Scenario.endTime = 14400
+Scenario.nrofHostGroups = 3
+
+## Override btInterface range to 50m (WiFi for mobile FL devices)
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 2M
+btInterface.transmitRange = 200
+
+highspeedInterface.type = SimpleBroadcastInterface
+highspeedInterface.transmitSpeed = 10M
+highspeedInterface.transmitRange = 200
+
+## Group defaults
+Group.router = CCNRouter
+CCNRouter.nrofCopies = 10
+CCNRouter.binaryMode = true
+Group.bufferSize = 50M
+Group.msgTtl = 3600
+Group.nrofInterfaces = 1
+Group.interface1 = btInterface
+Group.speed = 0.5, 2.5
+Group.waitTime = 0, 120
+Group.movementModel = RandomWaypoint
+
+MovementModel.rngSeed = 13
+MovementModel.worldSize = 2500, 2500
+MovementModel.warmup = 1000
+Optimization.cellSizeMult = 5
+
+## FL Aggregator (Group1 -- FULLY overrides ccn_default Group1)
+Aggregator.type = CCN_application
+Aggregator.mode = 1
+Aggregator.cacheCapacity = 5000
+Aggregator.avaCache = 0,1
+Aggregator.interestSize = 50
+Aggregator.interval = 60
+Aggregator.maxCarriedContent = 1
+Aggregator.enablePIT = true
+Aggregator.flMode = true
+Aggregator.flTotalRounds = 10
+Aggregator.flTotalNodes = 34
+Aggregator.flThreshold = 0.50
+
+Group1.nrofApplications = 1
+Group1.application1 = Aggregator
+Group1.nrofHosts = 1
+Group1.movementModel = StationaryMovement
+Group1.nodeLocation = 1250, 1250
+Group1.groupID = A
+Group1.bufferSize = 1G
+Group1.nrofInterfaces = 1
+Group1.interface1 = btInterface
+Group1.speed = 0, 0
+
+## FL Workers (Group2 -- FULLY overrides ccn_default Group2)
+FLWorker.type = CCN_application
+FLWorker.mode = 2
+FLWorker.cacheCapacity = 500
+FLWorker.avaCache = 1,1
+FLWorker.maxCarriedContent = 1
+FLWorker.enablePIT = true
+FLWorker.flMode = true
+FLWorker.flTotalRounds = 10
+FLWorker.flTotalNodes = 34
+FLWorker.contentSize = 524288
+
+Group2.nrofApplications = 1
+Group2.application1 = FLWorker
+Group2.nrofHosts = 34
+Group2.groupID = W
+Group2.nrofInterfaces = 1
+Group2.interface1 = btInterface
+Group2.movementModel = RandomWaypoint
+Group2.bufferSize = 50M
+Group2.speed = 0.5, 2.5
+
+## Relay nodes (Group3 -- FULLY overrides ccn_default Group3)
+Relay.type = CCN_application
+Relay.mode = 3
+Relay.cacheCapacity = 1000
+Relay.avaCache = 1,1
+Relay.maxCarriedContent = 5
+Relay.enablePIT = true
+Relay.flMode = true
+Relay.flTotalRounds = 10
+Relay.flTotalNodes = 34
+
+Group3.nrofApplications = 1
+Group3.application1 = Relay
+Group3.nrofHosts = 15
+Group3.groupID = R
+Group3.nrofInterfaces = 1
+Group3.interface1 = btInterface
+Group3.movementModel = RandomWaypoint
+Group3.bufferSize = 50M
+Group3.speed = 0.5, 2.5
+
+Report.nrofReports = 2
+Report.report1 = MessageStatsReport
+Report.report2 = CCNApplicationReport
+CCNApplicationReport.flTotalNodes  = 34
+CCNApplicationReport.flTotalRounds = 10
+Report.warmup = 0
+Report.reportDir = reports/fl/
+
+Events.nrof = 0
+
+GUI.UnderlayImage.fileName = data/helsinki_underlay.png
+GUI.UnderlayImage.offset = 64, 20
+GUI.UnderlayImage.scale = 4.75
+GUI.UnderlayImage.rotate = -0.015
+GUI.EventLogPanel.nrofEvents = 100

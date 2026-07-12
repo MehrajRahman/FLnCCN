@@ -1,0 +1,9 @@
+## Condition B — CCN no cache, 50 nodes, Random Waypoint
+## Run: java -jar one.jar -c fl_settings/fl_base_50.txt fl_settings/scenario_B_ccn_nocache_50_rwp.txt
+Scenario.name = FL_B_CCN_NoCache_50_RWP
+
+Group.router = CCNRouter
+Group.movementModel = RandomWaypoint
+Aggregator.avaCache = 0,0
+FLWorker.avaCache = 0,0
+Relay.avaCache = 0,0

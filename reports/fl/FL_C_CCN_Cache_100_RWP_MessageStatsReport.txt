@@ -1,0 +1,20 @@
+Message stats for scenario FL_C_CCN_Cache_100_RWP
+sim_time: 14400.0000
+created: 3945
+started: 73991
+relayed: 73991
+aborted: 0
+dropped: 0
+removed: 0
+delivered: 2032
+delivery_prob: 0.5151
+response_prob: 0.0000
+overhead_ratio: 35.4129
+latency_avg: 451.2384
+latency_med: 252.3000
+hopcount_avg: 3.0157
+hopcount_med: 3
+buffertime_avg: NaN
+buffertime_med: NaN
+rtt_avg: NaN
+rtt_med: NaN

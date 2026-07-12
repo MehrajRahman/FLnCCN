@@ -1,0 +1,16 @@
+## Condition A — Epidemic, 50 nodes, Shortest Path Map Based Movement
+Scenario.name = FL_A_Epidemic_50_SPMBM
+
+Group.router = EpidemicRouter
+Group.movementModel = ShortestPathMapBasedMovement
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+Aggregator.avaCache = 0,0
+FLWorker.avaCache = 0,0
+
+## SPMBM needs Helsinki map world size
+MovementModel.worldSize = 4500, 3400
+Group1.nodeLocation = 2250, 1700
