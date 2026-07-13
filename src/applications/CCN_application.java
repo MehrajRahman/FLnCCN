@@ -96,13 +96,19 @@ public class CCN_application extends Application {
 	public static final String MAX_CARRIED_CONTENT = "maxCarriedContent";
 
 	/** Federated Learning settings */
-	public static final String FL_MODE         = "flMode";
-	public static final String FL_TOTAL_ROUNDS = "flTotalRounds";
-	public static final String FL_TOTAL_NODES  = "flTotalNodes";
-	public static final String FL_THRESHOLD    = "flThreshold";
+	public static final String FL_MODE          = "flMode";
+	public static final String FL_TOTAL_ROUNDS  = "flTotalRounds";
+	public static final String FL_TOTAL_NODES   = "flTotalNodes";
+	public static final String FL_THRESHOLD     = "flThreshold";
+	/** How many simulation-seconds before the Aggregator retries an unanswered Interest (Issue 3 fix) */
+	public static final String FL_RETRY_INTERVAL = "flRetryInterval";
 
-	/** query record: first integer is the query_key, the second is to monitor does this query_key get response or not (1 for yes, 0 for no) */
-	private HashMap<Integer, Integer> query_record;
+	/**
+	 * query record: key = content key, value = sim-time (double) when the
+	 * Interest was sent, or 0.0 as a pending marker in non-FL mode.
+	 * Using double avoids the ≤1 s truncation error of getIntTime() (Issue 2 fix).
+	 */
+	private HashMap<Integer, Double> query_record;
 	
 	/** static cache */
 	private HashMap<Integer, String> static_cache;
@@ -147,8 +153,11 @@ public class CCN_application extends Application {
 	// ── Federated Learning layer ─────────────────────────────────────
 	private boolean      flMode            = false;
 	private int          flTotalRounds     = 10;
-	private int          flTotalNodes      = 49;
+	/** Sentinel value 0 means not yet configured from config file (Issue 5 fix) */
+	private int          flTotalNodes      = 0;
 	private double       flThreshold       = 0.70;
+	/** How long (sim-seconds) before retrying an unanswered Interest (Issue 3 fix) */
+	private double       flRetryInterval   = 2000.0;
 	/** Aggregator (mode=1) per-round state */
 	private int          currentRound      = 1;
 	private Set<Integer> receivedThisRound = new HashSet<Integer>();
@@ -274,7 +283,7 @@ public class CCN_application extends Application {
 		}
 		
 		if(this.query_record == null){
-			query_record = new HashMap<Integer, Integer>();			
+			query_record = new HashMap<Integer, Double>();
 			this.query_record.clear();  /** clear query_record list */
 		}
 		
@@ -307,10 +316,11 @@ public class CCN_application extends Application {
 		}
 
 		/** Federated Learning settings */
-		if (s.contains(FL_MODE))          this.flMode         = s.getBoolean(FL_MODE);
-		if (s.contains(FL_TOTAL_ROUNDS))  this.flTotalRounds  = s.getInt(FL_TOTAL_ROUNDS);
-		if (s.contains(FL_TOTAL_NODES))   this.flTotalNodes   = s.getInt(FL_TOTAL_NODES);
-		if (s.contains(FL_THRESHOLD))     this.flThreshold    = s.getDouble(FL_THRESHOLD);
+		if (s.contains(FL_MODE))           this.flMode          = s.getBoolean(FL_MODE);
+		if (s.contains(FL_TOTAL_ROUNDS))   this.flTotalRounds   = s.getInt(FL_TOTAL_ROUNDS);
+		if (s.contains(FL_TOTAL_NODES))    this.flTotalNodes    = s.getInt(FL_TOTAL_NODES);
+		if (s.contains(FL_THRESHOLD))      this.flThreshold     = s.getDouble(FL_THRESHOLD);
+		if (s.contains(FL_RETRY_INTERVAL)) this.flRetryInterval = s.getDouble(FL_RETRY_INTERVAL);
 
 		super.setAppID(APP_ID);
 	}
@@ -419,7 +429,7 @@ public class CCN_application extends Application {
 		this.query_range_Max = a.getQueryRangeMax();
 		this.mode = a.getMode();
 		//this.query_record = a.query_record;
-		this.query_record = new HashMap<Integer, Integer>();
+		this.query_record = new HashMap<Integer, Double>();
 		
 		//this.static_cache = a.static_cache;
 		this.static_cache_value_Min = a.static_cache_value_Min;
@@ -448,6 +458,7 @@ public class CCN_application extends Application {
 		this.flTotalRounds     = a.flTotalRounds;
 		this.flTotalNodes      = a.flTotalNodes;
 		this.flThreshold       = a.flThreshold;
+		this.flRetryInterval   = a.flRetryInterval;
 		this.currentRound      = 1;
 		this.receivedThisRound = new HashSet<Integer>();
 		this.flRoundStartTime  = -1.0;
@@ -518,11 +529,11 @@ public class CCN_application extends Application {
 			else if(this.mode == 1){
 				int response_key_in_int = Integer.parseInt(query_key_of_response);
 				if(this.query_record == null){
-					query_record = new HashMap<Integer, Integer>();
+					query_record = new HashMap<Integer, Double>();
 				}
-				// capture send-time before the record is removed, for per-update latency
-				Integer flSentAt = this.query_record.get(response_key_in_int);
-				if(this.query_record.get( response_key_in_int) != null && this.query_record.get( response_key_in_int ) != 1){
+				// capture send-time (double precision) before the record is removed, for latency (Issue 2 fix)
+				Double flSentAt = this.query_record.get(response_key_in_int);
+				if(this.query_record.get(response_key_in_int) != null){
 					super.sendEventToListeners("OriginalGotResponse", query_key_of_response, host);
 //					this.query_record.put(response_key_in_int, 1);
 					this.query_record.remove(response_key_in_int);
@@ -929,13 +940,13 @@ public class CCN_application extends Application {
 				if (curTime - this.lastPing >= this.interval) {
 					if (this.static_cache == null) Ini_static_cache(host);
 					if (this.oppo_cache == null)   Ini_oppo_cache();
-					if (this.query_record == null)  query_record = new HashMap<Integer, Integer>();
+					if (this.query_record == null)  query_record = new HashMap<Integer, Double>();
 					for (int nodeID = 1; nodeID <= flTotalNodes; nodeID++) {
 						if (!receivedThisRound.contains(nodeID)) {
 							int contentKey = getFLContentKey(currentRound, nodeID);
-							Integer sentAt = query_record.get(contentKey);
-							// Send if never queried, or retry after ~2000s if no response
-							if (sentAt == null || (SimClock.getIntTime() - sentAt) > 2000) {
+							Double sentAt = query_record.get(contentKey);
+							// Send if never queried, or retry after flRetryInterval seconds (Issue 3 fix)
+							if (sentAt == null || (SimClock.getTime() - sentAt) > flRetryInterval) {
 								// Address Interest directly to the target worker (address = nodeID)
 								// This avoids Interest-redirect chain explosion with Epidemic routing
 								List<DTNHost> allHosts = SimScenario.getInstance().getWorld().getHosts();
@@ -956,7 +967,7 @@ public class CCN_application extends Application {
 								m.setAppID(APP_ID);
 								host.createNewMessage(m);
 								super.sendEventToListeners("SentQuery", String.valueOf(contentKey), host);
-								query_record.put(contentKey, SimClock.getIntTime());
+								query_record.put(contentKey, SimClock.getTime()); // double precision (Issue 2 fix)
 							}
 						}
 					}
@@ -1048,7 +1059,7 @@ public class CCN_application extends Application {
 						host.createNewMessage(m);
 								
 						super.sendEventToListeners("SentQuery", (String)m.getProperty("queryMsg"), host);
-						this.query_record.put(query_key, 0);
+						this.query_record.put(query_key, 0.0); // pending marker (non-FL mode)
 //					//	System.out.println(host + " query for [" + (String)m.getProperty("queryMsg") + "] to random host:" + random_host  + " query record " + this.query_record);
 					}
 					else{
