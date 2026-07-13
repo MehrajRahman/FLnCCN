@@ -59,7 +59,6 @@ FLWorker.cacheCapacity = 500
 FLWorker.avaCache = 1,1
 FLWorker.maxCarriedContent = 1
 FLWorker.enablePIT = true
-FLWorker.flMode = true
 FLWorker.flTotalRounds = 10
 FLWorker.flTotalNodes = 69
 FLWorker.contentSize = 524288
@@ -80,9 +79,6 @@ Relay.cacheCapacity = 1000
 Relay.avaCache = 1,1
 Relay.maxCarriedContent = 5
 Relay.enablePIT = true
-Relay.flMode = true
-Relay.flTotalRounds = 10
-Relay.flTotalNodes = 69
 
 Group3.nrofApplications = 1
 Group3.application1 = Relay
