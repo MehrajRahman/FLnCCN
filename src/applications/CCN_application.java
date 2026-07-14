@@ -163,6 +163,33 @@ public class CCN_application extends Application {
 	private Set<Integer> receivedThisRound = new HashSet<Integer>();
 	private double       flRoundStartTime  = -1.0;
 
+	// ── UFCR Online Caching Metrics ──
+	private int estimatedCurrentRound = 1;
+	private int totalInterestsObserved = 0;
+	private HashMap<Integer, Integer> interestFrequencies = new HashMap<Integer, Integer>();
+	private Set<Integer> lastActivePeers = null;
+	private int totalEncountersCount = 0;
+	private int aggregatorEncountersCount = 0;
+
+	public int getEstimatedCurrentRound() {
+		if (this.mode == 1) {
+			return this.currentRound;
+		}
+		return this.estimatedCurrentRound;
+	}
+
+	public double getOnlineRequestProbability(int key) {
+		if (totalInterestsObserved == 0) {
+			return 0.5;
+		}
+		int count = interestFrequencies.getOrDefault(key, 0);
+		return (double) (count + 1) / (totalInterestsObserved + 1);
+	}
+
+	public double getOnlineDeliveryProbability() {
+		return (double) (aggregatorEncountersCount + 1) / (totalEncountersCount + 2);
+	}
+
 	/** Zipf destribution parameters */
 	private static final    String queryDistributionString = "queryDistribution"; //1 for normal random query, 2 for ZipF distribution
 	private int				queryDistribution = 1;	// 1 for default
@@ -331,7 +358,7 @@ public class CCN_application extends Application {
 	public void Ini_oppo_cache(){
 		if(true_oppo_cache >= 1){
 			/** initialize oppo_cache */
-			this.oppo_cache = new LRUCache(this.capacity_of_cache);
+			this.oppo_cache = new LRUCache(this.capacity_of_cache, this);
 		}
 	}
 		
@@ -490,6 +517,29 @@ public class CCN_application extends Application {
 //		System.out.println("in message handle : " + host);
 
 		if(type == null) return msg; //Not a valid msg
+
+		// Snoop flRound to estimate current round online (UFCR)
+		Object snoopFlRoundObj = msg.getProperty("flRound");
+		if (snoopFlRoundObj != null) {
+			int r = (Integer) snoopFlRoundObj;
+			if (r > estimatedCurrentRound) {
+				estimatedCurrentRound = r;
+			}
+		}
+
+		// Track interest request frequencies (UFCR)
+		if (type.equalsIgnoreCase("query_ad")) {
+			String qMsg = (String) msg.getProperty("queryMsg");
+			if (qMsg != null) {
+				try {
+					int qKey = Integer.parseInt(qMsg);
+					totalInterestsObserved++;
+					interestFrequencies.put(qKey, interestFrequencies.getOrDefault(qKey, 0) + 1);
+				} catch (NumberFormatException e) {
+					// ignore
+				}
+			}
+		}
 		
 		if(this.ini_cache_again == true || static_cache == null){
 			this.ini_cache_again = false;
@@ -929,6 +979,28 @@ public class CCN_application extends Application {
 	 */
 	@Override
 	public void update(DTNHost host) {
+		// Track active connections for delivery probability estimation (UFCR)
+		if (this.lastActivePeers == null) {
+			this.lastActivePeers = new HashSet<Integer>();
+		}
+		List<Connection> connections = host.getConnections();
+		for (Connection con : connections) {
+			DTNHost peer = con.getOtherNode(host);
+			int peerAddr = peer.getAddress();
+			if (!lastActivePeers.contains(peerAddr)) {
+				// New connection encounter!
+				totalEncountersCount++;
+				if (peerAddr == 0) { // Aggregator address is 0
+					aggregatorEncountersCount++;
+				}
+			}
+		}
+		// Refresh last active peers list
+		lastActivePeers.clear();
+		for (Connection con : connections) {
+			lastActivePeers.add(con.getOtherNode(host).getAddress());
+		}
+
 		if(this.mode == 1){
 			/** only consumers generate msg */
 			double curTime = SimClock.getTime();
