@@ -162,6 +162,9 @@ public class CCN_application extends Application {
 	private int          currentRound      = 1;
 	private Set<Integer> receivedThisRound = new HashSet<Integer>();
 	private double       flRoundStartTime  = -1.0;
+	private double       totalRoundDurationSum = 0.0;
+	private int          completedFLRounds     = 0;
+	private double       averageRoundDuration  = -1.0;
 
 	// ── UFCR Online Caching Metrics ──
 	private int estimatedCurrentRound = 1;
@@ -610,13 +613,13 @@ public class CCN_application extends Application {
 										new Object[]{currentRound, Boolean.valueOf(fromCache),
 										             Double.valueOf(retrievalLatency)}, host);
 									double ratio = (double) receivedThisRound.size() / flTotalNodes;
-									if (ratio >= flThreshold) {
-										double latency = SimClock.getTime() - flRoundStartTime;
-										super.sendEventToListeners("FLRoundComplete",
-											new Object[]{currentRound, receivedThisRound.size(), latency}, host);
-										currentRound++;
-										receivedThisRound.clear();
-										flRoundStartTime = -1.0;
+									double targetThreshold = flThreshold;
+									if (averageRoundDuration > 0) {
+										double elapsedTime = SimClock.getTime() - flRoundStartTime;
+										targetThreshold = Math.max(0.3, 1.0 - (elapsedTime / averageRoundDuration));
+									}
+									if (ratio >= targetThreshold) {
+										aggregateFLRound(host);
 									}
 								}
 							}
@@ -906,6 +909,20 @@ public class CCN_application extends Application {
 	  return msg;
 	}
 
+	private void aggregateFLRound(DTNHost host) {
+		double latency = SimClock.getTime() - flRoundStartTime;
+		totalRoundDurationSum += latency;
+		completedFLRounds++;
+		averageRoundDuration = totalRoundDurationSum / completedFLRounds;
+
+		super.sendEventToListeners("FLRoundComplete",
+			new Object[]{currentRound, receivedThisRound.size(), latency}, host);
+
+		currentRound++;
+		receivedThisRound.clear();
+		flRoundStartTime = -1.0;
+	}
+
 	/** 
 	 * Draws a random host from the destination range
 	 * 
@@ -1009,6 +1026,15 @@ public class CCN_application extends Application {
 			if (this.flMode) {
 				if (currentRound > flTotalRounds) return;
 				if (flRoundStartTime < 0) flRoundStartTime = curTime;
+				if (averageRoundDuration > 0 && receivedThisRound.size() > 0) {
+					double elapsedTime = curTime - flRoundStartTime;
+					double adaptiveThreshold = Math.max(0.3, 1.0 - (elapsedTime / averageRoundDuration));
+					double ratio = (double) receivedThisRound.size() / flTotalNodes;
+					if (ratio >= adaptiveThreshold) {
+						aggregateFLRound(host);
+						return;
+					}
+				}
 				if (curTime - this.lastPing >= this.interval) {
 					if (this.static_cache == null) Ini_static_cache(host);
 					if (this.oppo_cache == null)   Ini_oppo_cache();
