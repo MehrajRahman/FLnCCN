@@ -16,16 +16,19 @@ caching_gain_index: 74.98
 retrieval_latency_reduction: -78.37
 interest_satisfaction_rate: 86.47
 dissemination_efficiency: 0.000933
+total_fl_cache_hits: 485
+useful_fl_cache_hits: 7
+useful_fl_cache_hit_ratio: 0.0144
 
 === FL Per-Round Metrics ===
-round,updates_collected,completion_lat_s,served_from_cache,cache_served_frac,cache_lat_s,origin_lat_s
-1,17,1093.3,3,0.176,731.2,280.8
-2,14,643.2,0,0.000,-1.0,238.2
-3,15,486.5,1,0.067,351.8,116.5
-4,11,501.3,0,0.000,-1.0,164.1
-5,11,460.8,2,0.182,301.0,127.1
-6,11,474.8,0,0.000,-1.0,173.9
-7,12,394.7,0,0.000,-1.0,98.1
-8,11,391.9,1,0.091,317.8,104.3
-9,11,587.7,0,0.000,-1.0,195.7
-10,12,362.0,0,0.000,-1.0,109.4
+round,updates_collected,completion_lat_s,useful_cache_hits,total_cache_hits,useful_cache_hit_ratio,cache_served_frac,cache_lat_s,origin_lat_s
+1,17,1093.3,3,30,0.100,0.176,731.2,280.8
+2,14,643.2,0,15,0.000,0.000,-1.0,238.2
+3,15,486.5,1,18,0.056,0.067,351.8,116.5
+4,11,501.3,0,22,0.000,0.000,-1.0,164.1
+5,11,460.8,2,38,0.053,0.182,301.0,127.1
+6,11,474.8,0,26,0.000,0.000,-1.0,173.9
+7,12,394.7,0,21,0.000,0.000,-1.0,98.1
+8,11,391.9,1,27,0.037,0.091,317.8,104.3
+9,11,587.7,0,40,0.000,0.000,-1.0,195.7
+10,12,362.0,0,16,0.000,0.000,-1.0,109.4

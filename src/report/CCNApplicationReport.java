@@ -24,6 +24,8 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 	private Map<Integer, Double>  flRoundCompletionTime = new HashMap<>();
 	private Map<Integer, Integer> flRoundCacheHits      = new HashMap<>();
 	private int flCurrentRoundCacheHits = 0;
+	private int totalFLCacheHits = 0;
+	private int usefulFLCacheHits = 0;
 
 	// ── FL provenance: how each delivered update was satisfied ─────────────────────
 	//   from-cache  = served by a node that is NOT the original producer
@@ -162,6 +164,7 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 
 		if (event.equals("FLCacheHit")) {
 			flCurrentRoundCacheHits++;
+			totalFLCacheHits++;
 		}
 
 		if (event.equals("FLUpdateServed") && params instanceof Object[]) {
@@ -171,6 +174,7 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 			double  latency   = (Double)  d[2];
 			if (fromCache) {
 				flRoundUpdatesFromCache.merge(round, 1, Integer::sum);
+				usefulFLCacheHits++;
 			}
 			if (latency >= 0) {
 				if (fromCache) {
@@ -365,7 +369,10 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 //			"\ncontent_accessibility_ratio: " + String.format("%.2f", this.content_accessibility_ratio) +
 			"\nretrieval_latency_reduction: " + String.format("%.2f", this.retrieval_latency_reduction) +
 			"\ninterest_satisfaction_rate: " + String.format("%.2f", this.interest_satisfaction_rate) +
-			"\ndissemination_efficiency: " + String.format("%.6f", calculateDisseminationEfficiency())
+			"\ndissemination_efficiency: " + String.format("%.6f", calculateDisseminationEfficiency()) +
+			"\ntotal_fl_cache_hits: " + this.totalFLCacheHits +
+			"\nuseful_fl_cache_hits: " + this.usefulFLCacheHits +
+			"\nuseful_fl_cache_hit_ratio: " + String.format("%.4f", totalFLCacheHits > 0 ? (double) usefulFLCacheHits / totalFLCacheHits : 0.0)
 			;
 
 		write(statsText);
@@ -377,24 +384,31 @@ public class CCNApplicationReport extends Report implements ApplicationListener 
 			//                      (the round completes at flThreshold by design, so this
 			//                      is a transport-completion count, NOT a learning metric)
 			// completion_lat_s   : sim-seconds from round start until threshold reached
-			// served_from_cache  : updates satisfied by an in-network cache, not the origin
-			// cache_served_frac  : served_from_cache / updates_collected, bounded [0,1]
+			// useful_cache_hits  : updates satisfied by an in-network cache, not the origin
+			// total_cache_hits   : total FLCacheHit events in the network
+			// useful_cache_hit_ratio : useful_cache_hits / total_cache_hits
+			// cache_served_frac  : useful_cache_hits / updates_collected, bounded [0,1]
 			// cache_lat_s/origin_lat_s : mean interest->response latency, split by provenance
-			write("round,updates_collected,completion_lat_s,served_from_cache,"
-			    + "cache_served_frac,cache_lat_s,origin_lat_s");
+			write("round,updates_collected,completion_lat_s,useful_cache_hits,total_cache_hits,"
+			    + "useful_cache_hit_ratio,cache_served_frac,cache_lat_s,origin_lat_s");
 			for (int r = 1; r <= flTotalRounds; r++) {
 				int    delivered  = flRoundDeliveryCount.getOrDefault(r, 0);
 				double latency    = flRoundCompletionTime.getOrDefault(r, -1.0);
-				int    fromCache  = flRoundUpdatesFromCache.getOrDefault(r, 0);
+				int    usefulHits = flRoundUpdatesFromCache.getOrDefault(r, 0);
+				int    totalHits  = flRoundCacheHits.getOrDefault(r, 0);
 				double cacheFrac  = delivered > 0
-				                    ? (double) fromCache / delivered : 0.0;
+				                    ? (double) usefulHits / delivered : 0.0;
+				double usefulRatio = totalHits > 0
+				                    ? (double) usefulHits / totalHits : 0.0;
 				double cacheLat   = flRoundCacheLatencyCnt.getOrDefault(r, 0) > 0
 				    ? flRoundCacheLatencySum.get(r) / flRoundCacheLatencyCnt.get(r) : -1.0;
 				double originLat  = flRoundOriginLatencyCnt.getOrDefault(r, 0) > 0
 				    ? flRoundOriginLatencySum.get(r) / flRoundOriginLatencyCnt.get(r) : -1.0;
 				write(r + "," + delivered + ","
 				    + String.format("%.1f", latency) + ","
-				    + fromCache + ","
+				    + usefulHits + ","
+				    + totalHits + ","
+				    + String.format("%.3f", usefulRatio) + ","
 				    + String.format("%.3f", cacheFrac) + ","
 				    + String.format("%.1f", cacheLat) + ","
 				    + String.format("%.1f", originLat));
