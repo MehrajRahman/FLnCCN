@@ -109,7 +109,7 @@ public class LRUCache {
 	}
 
 	public void set(int key, String value) {
-		System.out.println("LRUCache set: key=" + key + " (Round " + (key/1000) + ") capacity=" + capacity + " len=" + len);
+		// System.out.println("LRUCache set: key=" + key + " (Round " + (key/1000) + ") capacity=" + capacity + " len=" + len);
 		if (map.containsKey(key)) {
 			DoubleLinkedListNode oldNode = map.get(key);
 			oldNode.val = value;
@@ -147,12 +147,12 @@ public class LRUCache {
 				}
 				
 				if (minNode != null) {
-					System.out.println("UFCR Eviction: node " + minNode.key + " (Round " + (minNode.key/1000) + ") evicted with utility " + minUtility);
+					// System.out.println("UFCR Eviction: node " + minNode.key + " (Round " + (minNode.key/1000) + ") evicted with utility " + minUtility);
 					map.remove(minNode.key);
 					removeNode(minNode);
 				} else {
 					// Fallback to standard tail eviction
-					System.out.println("UFCR Eviction Fallback: tail node " + end.key + " evicted");
+					// System.out.println("UFCR Eviction Fallback: tail node " + end.key + " evicted");
 					map.remove(end.key);
 					end = end.pre;
 					if (end != null) {

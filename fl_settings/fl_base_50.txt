@@ -60,7 +60,7 @@ Group1.speed = 0, 0
 ## FL Workers (Group2 -- FULLY overrides ccn_default Group2)
 FLWorker.type = CCN_application
 FLWorker.mode = 2
-FLWorker.cacheCapacity = 5
+FLWorker.cacheCapacity = 500
 FLWorker.flMode = true
 FLWorker.avaCache = 1,1
 FLWorker.maxCarriedContent = 1
@@ -82,7 +82,7 @@ Group2.speed = 0.5, 2.5
 ## Relay nodes (Group3 -- FULLY overrides ccn_default Group3)
 Relay.type = CCN_application
 Relay.mode = 3
-Relay.cacheCapacity = 5
+Relay.cacheCapacity = 1000
 Relay.flMode = true
 Relay.avaCache = 1,1
 Relay.maxCarriedContent = 5
