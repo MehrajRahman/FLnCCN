@@ -1,21 +1,21 @@
 WebApp stats for scenario FL_B_CCN_NoCache_50_RWP
-sim_time: 14400.0000
+sim_time: 3600.1000
 
 oppo_cache_hit: 0
 oppo_cache_miss: 0
 drop_list:  0
 drop_pit:  0
 drop_nonce:  0
-query_count: 340
+query_count: 204
 duplicated_query: 0
-static_cache_hit: 340
-static_cache_miss: 11097
-response_count: 311
-average_interval: 1042
-caching_gain_index: 52.23
+static_cache_hit: 158
+static_cache_miss: 3662
+response_count: 134
+average_interval: 711
+caching_gain_index: 54.11
 retrieval_latency_reduction: 100.00
-interest_satisfaction_rate: 91.47
-dissemination_efficiency: 0.000877
+interest_satisfaction_rate: 65.69
+dissemination_efficiency: 0.000922
 total_fl_cache_hits: 0
 useful_fl_cache_hits: 0
 useful_fl_cache_hit_ratio: 0.0000
@@ -27,8 +27,8 @@ round,updates_collected,completion_lat_s,useful_cache_hits,total_cache_hits,usef
 3,12,612.7,0,0,0.000,0.000,-1.0,223.4
 4,13,516.1,0,0,0.000,0.000,-1.0,274.9
 5,12,499.7,0,0,0.000,0.000,-1.0,78.4
-6,12,455.9,0,0,0.000,0.000,-1.0,84.1
-7,11,998.5,0,0,0.000,0.000,-1.0,219.7
-8,11,503.4,0,0,0.000,0.000,-1.0,154.6
-9,11,962.5,0,0,0.000,0.000,-1.0,498.8
-10,13,442.2,0,0,0.000,0.000,-1.0,172.3
+6,0,-1.0,0,0,0.000,0.000,-1.0,13.5
+7,0,-1.0,0,0,0.000,0.000,-1.0,-1.0
+8,0,-1.0,0,0,0.000,0.000,-1.0,-1.0
+9,0,-1.0,0,0,0.000,0.000,-1.0,-1.0
+10,0,-1.0,0,0,0.000,0.000,-1.0,-1.0

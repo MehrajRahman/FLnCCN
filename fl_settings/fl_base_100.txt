@@ -2,7 +2,7 @@
 
 Scenario.simulateConnections = true
 Scenario.updateInterval = 0.1
-Scenario.endTime = 14400
+Scenario.endTime = 3600
 Scenario.nrofHostGroups = 3
 
 btInterface.type = SimpleBroadcastInterface

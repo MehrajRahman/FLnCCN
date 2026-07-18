@@ -4,9 +4,9 @@ Evaluation of Utility-Based Federated Cache Replacement (UFCR) and Adaptive Aggr
 
 | Scenario | Protocol | Mobility | Rounds | Total Updates | Avg Round Latency (s) | Useful Cache Hits | Useful Cache Hit Ratio | Delivery Prob | Overhead Ratio |
 |---|---|---|---|---|---|---|---|---|---|
-| Scenario A | Epidemic | RWP | 10 | 0 | 0.0 | 0 | 0.0000 | 0.0000 | 0.0000 |
-| Scenario A | Epidemic | SPMBM | 10 | 91 | 1848.2 | 4 | 0.0025 | 0.5305 | 47.6242 |
-| Scenario B | CCN-NoCache | RWP | 10 | 129 | 688.5 | 0 | 0.0000 | 0.9574 | 28.6651 |
-| Scenario B | CCN-NoCache | SPMBM | 10 | 88 | 1991.2 | 0 | 0.0000 | 0.7970 | 20.1910 |
-| Scenario C | CCN-Cache | RWP | 10 | 127 | 628.4 | 14 | 0.0211 | 0.8550 | 15.5009 |
-| Scenario C | CCN-Cache | SPMBM | 10 | 87 | 1903.6 | 8 | 0.0203 | 0.7568 | 13.9460 |
+| Scenario A | Epidemic | RWP | 10 | 121 | 379.7 | 2 | 0.0024 | 0.6590 | 44.9066 |
+| Scenario A | Epidemic | SPMBM | 10 | 17 | 2205.6 | 0 | 0.0000 | 0.5695 | 39.0291 |
+| Scenario B | CCN-NoCache | RWP | 10 | 71 | 704.4 | 0 | 0.0000 | 0.8066 | 20.8459 |
+| Scenario B | CCN-NoCache | SPMBM | 10 | 17 | 2249.1 | 0 | 0.0000 | 0.6667 | 18.6489 |
+| Scenario C | CCN-Cache | RWP | 10 | 81 | 595.8 | 9 | 0.0443 | 0.7624 | 15.6502 |
+| Scenario C | CCN-Cache | SPMBM | 10 | 17 | 2249.3 | 3 | 0.0536 | 0.6548 | 14.2481 |
