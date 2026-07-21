@@ -338,10 +338,10 @@ def main():
     if not parse_only:
         print("=" * 60)
         print("  FLnCCN Parallel Experiment Suite")
-        print(f"  Running {len(EXPERIMENTS)} configurations (3 parallel workers)")
+        print(f"  Running {len(EXPERIMENTS)} configurations (4 parallel workers)")
         print("=" * 60)
 
-        with Pool(processes=3) as pool:
+        with Pool(processes=4) as pool:
             results = pool.map(run_experiment, EXPERIMENTS)
 
         print("\nAll simulations finished. Parsing reports...\n")
