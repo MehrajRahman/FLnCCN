@@ -3,7 +3,7 @@
 
 Scenario.simulateConnections = true
 Scenario.updateInterval = 0.1
-Scenario.endTime = 3600
+Scenario.endTime = 14400
 Scenario.nrofHostGroups = 3
 
 ## Override btInterface range to 50m (WiFi for mobile FL devices)

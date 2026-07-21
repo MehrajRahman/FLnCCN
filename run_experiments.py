@@ -59,6 +59,20 @@ EXPERIMENTS = [
         "msg_report": "reports/fl/FL_B_CCN_NoCache_50_SPMBM_MessageStatsReport.txt",
     },
     {
+        "name":       "FL_D_CCN_LRU_50_RWP",
+        "label":      "Scenario D | CCN-LRU    | RWP",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_50.txt fl_settings/scenario_D_ccn_lru_50_rwp.txt",
+        "app_report": "reports/fl/FL_D_CCN_LRU_50_RWP_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_D_CCN_LRU_50_RWP_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_D_CCN_LRU_50_SPMBM",
+        "label":      "Scenario D | CCN-LRU    | SPMBM",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_50.txt fl_settings/scenario_D_ccn_lru_50_spmbm.txt",
+        "app_report": "reports/fl/FL_D_CCN_LRU_50_SPMBM_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_D_CCN_LRU_50_SPMBM_MessageStatsReport.txt",
+    },
+    {
         "name":       "FL_C_CCN_Cache_50_RWP",
         "label":      "Scenario C | CCN-Cache  | RWP",
         "cmd":        "./one.sh -b 1 fl_settings/fl_base_50.txt fl_settings/scenario_C_ccn_cache_50_rwp.txt",

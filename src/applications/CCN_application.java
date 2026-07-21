@@ -167,6 +167,10 @@ public class CCN_application extends Application {
 	private double       averageRoundDuration  = -1.0;
 
 	// ── UFCR Online Caching Metrics ──
+	/** Config key to enable/disable UFCR. Set to false for the plain LRU baseline (Scenario D). */
+	public static final String USE_UFCR = "useUFCR";
+	private boolean useUFCR = true;
+
 	private int estimatedCurrentRound = 1;
 	private int totalInterestsObserved = 0;
 	private HashMap<Integer, Integer> interestFrequencies = new HashMap<Integer, Integer>();
@@ -352,6 +356,9 @@ public class CCN_application extends Application {
 		if (s.contains(FL_THRESHOLD))      this.flThreshold     = s.getDouble(FL_THRESHOLD);
 		if (s.contains(FL_RETRY_INTERVAL)) this.flRetryInterval = s.getDouble(FL_RETRY_INTERVAL);
 
+		/** UFCR: read useUFCR flag (default true). Set to false to use plain LRU (Scenario D). */
+		if (s.contains(USE_UFCR))          this.useUFCR         = s.getBoolean(USE_UFCR);
+
 		super.setAppID(APP_ID);
 	}
 
@@ -360,8 +367,8 @@ public class CCN_application extends Application {
 	*/	
 	public void Ini_oppo_cache(){
 		if(true_oppo_cache >= 1){
-			/** initialize oppo_cache */
-			this.oppo_cache = new LRUCache(this.capacity_of_cache, this);
+			/** initialize oppo_cache with the chosen eviction policy */
+			this.oppo_cache = new LRUCache(this.capacity_of_cache, this, this.useUFCR);
 		}
 	}
 		

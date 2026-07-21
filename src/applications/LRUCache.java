@@ -1,6 +1,11 @@
 /**
-@implementation of Least Recent Used cache / Utility-Based Federated Cache
-*/
+ * LRUCache — dual-mode opportunistic cache for FLxCD.
+ *
+ * When useUFCR = true  (Scenario C): evicts the entry with the lowest
+ *   UFCR utility score  U = P_request × P_deliver × F × A.
+ * When useUFCR = false (Scenario D): evicts the least-recently-used tail
+ *   entry (plain LRU baseline) — no FL-semantic awareness.
+ */
 
 package applications; 
 import java.util.HashMap;
@@ -14,6 +19,8 @@ public class LRUCache {
 	private int capacity;
 	private int len;
 	private CCN_application app = null;
+	/** When true, use UFCR utility-based eviction. When false, use plain LRU tail eviction. */
+	private boolean useUFCR = true;
  
 	public LRUCache(int capacity) {
 		this.capacity = capacity;
@@ -25,6 +32,18 @@ public class LRUCache {
 		this.app = app;
 		len = 0;
 	}
+
+	/**
+	 * @param capacity   Max number of cached entries.
+	 * @param app        Reference to the owning application (for UFCR metrics).
+	 * @param useUFCR    If true, evict by UFCR utility score. If false, plain LRU tail eviction.
+	 */
+	public LRUCache(int capacity, CCN_application app, boolean useUFCR) {
+		this.capacity = capacity;
+		this.app = app;
+		this.useUFCR = useUFCR;
+		len = 0;
+	}
 	
 	public LRUCache(LRUCache another){
 		this.map = another.map;
@@ -33,6 +52,7 @@ public class LRUCache {
 		this.capacity = another.capacity;
 		this.len = another.len;
 		this.app = another.app;
+		this.useUFCR = another.useUFCR;
 	}
  
 	public String get(int key) {
@@ -127,37 +147,42 @@ public class LRUCache {
 				map.put(key, newNode);
 				len++;
 			} else {
-				// Evict based on UFCR utility score
-				DoubleLinkedListNode minNode = null;
-				double minUtility = Double.MAX_VALUE;
-				
-				DoubleLinkedListNode curr = head;
-				while (curr != null) {
-					double u = calculateUtility(curr);
-					if (u < minUtility) {
-						minUtility = u;
-						minNode = curr;
-					} else if (u == minUtility) {
-						// Tie-breaker: oldest lastAccessTime (classic LRU)
-						if (minNode == null || curr.lastAccessTime < minNode.lastAccessTime) {
+				if (useUFCR && app != null) {
+					// ── UFCR eviction: evict entry with lowest utility score ──
+					DoubleLinkedListNode minNode = null;
+					double minUtility = Double.MAX_VALUE;
+					
+					DoubleLinkedListNode curr = head;
+					while (curr != null) {
+						double u = calculateUtility(curr);
+						if (u < minUtility) {
+							minUtility = u;
 							minNode = curr;
+						} else if (u == minUtility) {
+							// Tie-breaker: oldest lastAccessTime (classic LRU)
+							if (minNode == null || curr.lastAccessTime < minNode.lastAccessTime) {
+								minNode = curr;
+							}
 						}
+						curr = curr.next;
 					}
-					curr = curr.next;
-				}
-				
-				if (minNode != null) {
-					// System.out.println("UFCR Eviction: node " + minNode.key + " (Round " + (minNode.key/1000) + ") evicted with utility " + minUtility);
-					map.remove(minNode.key);
-					removeNode(minNode);
+					
+					if (minNode != null) {
+						// System.out.println("UFCR Eviction: node " + minNode.key + " (Round " + (minNode.key/1000) + ") evicted with utility " + minUtility);
+						map.remove(minNode.key);
+						removeNode(minNode);
+					} else {
+						// Fallback: evict LRU tail
+						map.remove(end.key);
+						end = end.pre;
+						if (end != null) end.next = null;
+					}
 				} else {
-					// Fallback to standard tail eviction
-					// System.out.println("UFCR Eviction Fallback: tail node " + end.key + " evicted");
+					// ── Plain LRU eviction: always evict the tail (least recently used) ──
+					// System.out.println("LRU Eviction: tail node " + end.key + " (Round " + (end.key/1000) + ") evicted");
 					map.remove(end.key);
 					end = end.pre;
-					if (end != null) {
-						end.next = null;
-					}
+					if (end != null) end.next = null;
 				}
 				
 				setHead(newNode);

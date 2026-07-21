@@ -1,0 +1,21 @@
+## Scenario D — CCN with plain LRU cache (no UFCR), 50 nodes, Shortest Path Map Based Movement
+## This is the critical baseline that isolates the contribution of UFCR.
+## Identical to Scenario C except useUFCR = false → relay nodes evict by plain LRU,
+## with no FL-semantic awareness (no P_request, P_deliver, Freshness, or Aggregation Need scoring).
+Scenario.name = FL_D_CCN_LRU_50_SPMBM
+
+Group.router = CCNRouter
+Group.movementModel = ShortestPathMapBasedMovement
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+Aggregator.avaCache = 0,1
+FLWorker.avaCache = 1,1
+## Disable UFCR — use plain LRU eviction for the opportunistic cache
+Relay.useUFCR = false
+
+## SPMBM needs Helsinki map world size
+MovementModel.worldSize = 4500, 3400
+Group1.nodeLocation = 2250, 1700
