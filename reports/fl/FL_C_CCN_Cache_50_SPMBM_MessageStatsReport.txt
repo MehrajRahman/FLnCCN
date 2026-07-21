@@ -1,0 +1,20 @@
+Message stats for scenario FL_C_CCN_Cache_50_SPMBM
+sim_time: 14400.0000
+created: 1028
+started: 11628
+relayed: 11628
+aborted: 0
+dropped: 0
+removed: 0
+delivered: 778
+delivery_prob: 0.7568
+response_prob: 0.0000
+overhead_ratio: 13.9460
+latency_avg: 1399.2359
+latency_med: 1024.5000
+hopcount_avg: 2.8342
+hopcount_med: 2
+buffertime_avg: NaN
+buffertime_med: NaN
+rtt_avg: NaN
+rtt_med: NaN
