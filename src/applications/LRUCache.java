@@ -121,8 +121,10 @@ public class LRUCache {
 		int currentRound = app.getEstimatedCurrentRound();
 		double freshness = 1.0 / (1.0 + Math.max(0, currentRound - nodeRound));
 		
-		// 4. Aggregation Need A(u_i)
-		double aggNeed = (nodeRound >= currentRound) ? 1.0 : 0.0;
+		// 4. Aggregation Need A(u_i) — continuous [0,1], not binary.
+		//    Aggregator: (workers still needed) / flTotalNodes  (exact).
+		//    Relay/Worker: normalized Interest pressure proxy (parameter-free).
+		double aggNeed = app.getAggregationNeed(node.key);
 		
 		// Utility = P_request * P_deliver * F * A
 		return pRequest * pDeliver * freshness * aggNeed;

@@ -197,6 +197,47 @@ public class CCN_application extends Application {
 		return (double) (aggregatorEncountersCount + 1) / (totalEncountersCount + 2);
 	}
 
+	/**
+	 * Continuous Aggregation Need A(u_i) for UFCR — replaces the binary 0/1 term.
+	 *
+	 * Aggregator (mode=1): has exact knowledge of receivedThisRound.
+	 *   A = (workers still needed) / flTotalNodes  for the current round.
+	 *   A = 0.0 for any past round (already aggregated, no longer useful).
+	 *
+	 * Relay / Worker (mode=2/3): cannot observe receivedThisRound directly.
+	 *   Uses normalized Interest pressure as a proxy:
+	 *   A = requestCount(key) / totalInterestsObserved
+	 *   High Interest pressure implies the aggregator still needs this update.
+	 *   Falls back to 0.5 (neutral) when no Interest data is available yet.
+	 *
+	 * Both formulations are parameter-free — derived entirely from runtime observations.
+	 *
+	 * @param contentKey  Integer content key encoding round and producer ID.
+	 * @return Continuous value in [0.0, 1.0] representing aggregation need.
+	 */
+	public double getAggregationNeed(int contentKey) {
+		int contentRound = contentKey / 1000;
+
+		if (this.mode == 1) {
+			// Aggregator: exact knowledge
+			if (contentRound < currentRound) {
+				return 0.0; // Round already completed — update is no longer needed
+			}
+			if (flTotalNodes <= 0) {
+				return 1.0; // Not yet configured — assume full need
+			}
+			int stillNeeded = flTotalNodes - receivedThisRound.size();
+			return Math.max(0.0, (double) stillNeeded / flTotalNodes);
+		} else {
+			// Relay / Worker: use Interest pressure as proxy
+			if (totalInterestsObserved == 0) {
+				return 0.5; // No observations yet — neutral assumption
+			}
+			int requestCount = interestFrequencies.getOrDefault(contentKey, 0);
+			return Math.min(1.0, (double) (requestCount + 1) / (totalInterestsObserved + 1));
+		}
+	}
+
 	/** Zipf destribution parameters */
 	private static final    String queryDistributionString = "queryDistribution"; //1 for normal random query, 2 for ZipF distribution
 	private int				queryDistribution = 1;	// 1 for default
