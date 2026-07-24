@@ -1,7 +1,7 @@
 Run 1/1
 Running simulation 'FL_B_CCN_NoCache_50_SPMBM'
-60.0 9877: 164.61 1/s
-120.0 13689: 63.53 1/s
+60.0 8430: 140.50 1/s
+120.0 13151: 78.69 1/s
 Unique content gateway: 188 :: total unique content cache: 1
 received Time: 6658.600000006692	 sent Time 60.00000000000058
 received Time: 5513.600000002527	 sent Time 60.00000000000058
@@ -192,7 +192,7 @@ received Time: 12676.100000028584	 sent Time 12665.400000028545
 received Time: 12931.000000029511	 sent Time 12665.400000028545
 received Time: 13341.800000031006	 sent Time 12665.400000028545
 avgAoI: 2589.847872346787 | overhead: 1.946808510638298 | validDeliveries: 188
-132.0 14400: 59.24 1/s
-Simulation done in 131.94s
+140.6 14400: 60.64 1/s
+Simulation done in 140.53s
 ---
-All done in 132.26s
+All done in 140.86s

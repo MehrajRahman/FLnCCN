@@ -1,18 +1,18 @@
 Message stats for scenario FL_A_Epidemic_50_RWP
 sim_time: 14400.0000
-created: 1888
-started: 67473
-relayed: 67473
+created: 892
+started: 38808
+relayed: 38808
 aborted: 0
 dropped: 0
 removed: 0
-delivered: 1377
-delivery_prob: 0.7293
+delivered: 792
+delivery_prob: 0.8879
 response_prob: 0.0000
 overhead_ratio: 48.0000
-latency_avg: 335.6972
-latency_med: 282.3000
-hopcount_avg: 4.5926
+latency_avg: 282.7432
+latency_med: 202.4000
+hopcount_avg: 4.5164
 hopcount_med: 5
 buffertime_avg: NaN
 buffertime_med: NaN

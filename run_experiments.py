@@ -161,6 +161,9 @@ def parse_application_report(filepath):
         "avg_cache_served_frac":   0.0,
         "avg_cache_lat_s":         0.0,
         "avg_origin_lat_s":        0.0,
+        "oppo_cache_hits":         0,
+        "total_fl_cache_hits":     0,
+        "caching_gain_index":      0.0,
         "useful_fl_cache_hits":    0,
         "useful_fl_cache_hit_ratio": 0.0,
     }
@@ -174,7 +177,22 @@ def parse_application_report(filepath):
 
     for line in lines:
         # Global summary stats
-        if "useful_fl_cache_hits:" in line and "ratio" not in line:
+        if "oppo_cache_hit:" in line and "miss" not in line and "ratio" not in line:
+            try:
+                metrics["oppo_cache_hits"] = int(line.split(":")[1].strip())
+            except ValueError:
+                pass
+        elif "total_fl_cache_hits:" in line:
+            try:
+                metrics["total_fl_cache_hits"] = int(line.split(":")[1].strip())
+            except ValueError:
+                pass
+        elif "caching_gain_index:" in line:
+            try:
+                metrics["caching_gain_index"] = float(line.split(":")[1].strip())
+            except ValueError:
+                pass
+        elif "useful_fl_cache_hits:" in line and "ratio" not in line:
             try:
                 metrics["useful_fl_cache_hits"] = int(line.split(":")[1].strip())
             except ValueError:
@@ -285,9 +303,10 @@ def build_results_table():
     header = (
         "| Scenario | Protocol | Mobility | Rounds | Total Updates | "
         "Avg Round Latency (s) | Cache-Served Frac | Cache Lat (s) | Origin Lat (s) | "
-        "Useful Cache Hits | Useful Cache Hit Ratio | "
+        "Oppo Cache Hits | Total FL Cache Hits | Caching Gain Index | "
+        "Useful FL Hits | Useful FL Hit Ratio | "
         "Delivery Prob | Overhead Ratio |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
     )
     rows = [header]
 
@@ -307,22 +326,27 @@ def build_results_table():
         cache_frac  = app.get("avg_cache_served_frac",   0.0)
         cache_lat   = app.get("avg_cache_lat_s",         0.0)
         origin_lat  = app.get("avg_origin_lat_s",        0.0)
+        oppo_hits   = app.get("oppo_cache_hits",         "N/A")
+        total_fl_ch = app.get("total_fl_cache_hits",     "N/A")
+        gain_idx    = app.get("caching_gain_index",      0.0)
         u_hits      = app.get("useful_fl_cache_hits",    "N/A")
         u_ratio     = app.get("useful_fl_cache_hit_ratio", 0.0)
         deliv       = msg.get("delivery_prob",            0.0)
         overhead    = msg.get("overhead_ratio",           0.0)
 
-        lat_str        = f"{lat:.1f}"       if isinstance(lat,        float) else lat
+        lat_str        = f"{lat:.1f}"        if isinstance(lat,        float) else lat
         cache_frac_str = f"{cache_frac:.4f}" if isinstance(cache_frac, float) else cache_frac
-        cache_lat_str  = f"{cache_lat:.1f}" if isinstance(cache_lat,  float) else cache_lat
-        origin_lat_str = f"{origin_lat:.1f}"if isinstance(origin_lat, float) else origin_lat
-        u_ratio_str    = f"{u_ratio:.4f}"  if isinstance(u_ratio,    float) else u_ratio
-        deliv_str      = f"{deliv:.4f}"    if isinstance(deliv,      float) else deliv
-        over_str       = f"{overhead:.4f}" if isinstance(overhead,   float) else overhead
+        cache_lat_str  = f"{cache_lat:.1f}"  if isinstance(cache_lat,  float) else cache_lat
+        origin_lat_str = f"{origin_lat:.1f}" if isinstance(origin_lat, float) else origin_lat
+        gain_str       = f"{gain_idx:.2f}"   if isinstance(gain_idx,   float) else gain_idx
+        u_ratio_str    = f"{u_ratio:.4f}"    if isinstance(u_ratio,    float) else u_ratio
+        deliv_str      = f"{deliv:.4f}"      if isinstance(deliv,      float) else deliv
+        over_str       = f"{overhead:.4f}"   if isinstance(overhead,   float) else overhead
 
         rows.append(
             f"| {scenario} | {protocol} | {mobility} | {rounds} | {updates} | "
             f"{lat_str} | {cache_frac_str} | {cache_lat_str} | {origin_lat_str} | "
+            f"{oppo_hits} | {total_fl_ch} | {gain_str} | "
             f"{u_hits} | {u_ratio_str} | {deliv_str} | {over_str} |"
         )
 

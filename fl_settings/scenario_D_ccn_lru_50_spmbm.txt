@@ -13,6 +13,7 @@ MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
 MapBasedMovement.mapFile4 = data/shops.wkt
 Aggregator.avaCache = 0,1
 FLWorker.avaCache = 1,1
+Relay.avaCache = 0,1
 ## Disable UFCR — use plain LRU eviction for the opportunistic cache
 Relay.useUFCR = false
 

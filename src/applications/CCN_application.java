@@ -400,6 +400,7 @@ public class CCN_application extends Application {
 		/** UFCR: read useUFCR flag (default true). Set to false to use plain LRU (Scenario D). */
 		if (s.contains(USE_UFCR))          this.useUFCR         = s.getBoolean(USE_UFCR);
 
+
 		super.setAppID(APP_ID);
 	}
 
@@ -540,6 +541,9 @@ public class CCN_application extends Application {
 		this.currentRound      = 1;
 		this.receivedThisRound = new HashSet<Integer>();
 		this.flRoundStartTime  = -1.0;
+
+		// ── UFCR flag — MUST be copied so node instances respect the config ──
+		this.useUFCR           = a.useUFCR;
 	}
 	/** 
 	 * @param host	host for which PIT will be printed

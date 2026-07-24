@@ -82,9 +82,9 @@ Group2.speed = 0.5, 2.5
 ## Relay nodes (Group3 -- FULLY overrides ccn_default Group3)
 Relay.type = CCN_application
 Relay.mode = 3
-Relay.cacheCapacity = 1000
+Relay.cacheCapacity = 20
 Relay.flMode = true
-Relay.avaCache = 1,1
+Relay.avaCache = 0,1
 Relay.maxCarriedContent = 5
 Relay.enablePIT = true
 
