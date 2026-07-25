@@ -20,3 +20,5 @@ MovementModel.worldSize = 4500, 3400
 Group1.nodeLocation = 2250, 1700
 Relay.flTotalNodes = 69
 Group3.nrofHosts = 30
+Relay.avaCache = 0,1
+Relay.useUFCR = true

@@ -76,8 +76,8 @@ Group2.speed = 0.5, 2.5
 
 Relay.type = CCN_application
 Relay.mode = 3
-Relay.cacheCapacity = 1000
-Relay.avaCache = 1,1
+Relay.cacheCapacity = 20
+Relay.avaCache = 0,1
 Relay.maxCarriedContent = 5
 Relay.enablePIT = true
 Relay.flMode = true

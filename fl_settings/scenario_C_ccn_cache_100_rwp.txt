@@ -11,3 +11,5 @@ Group2.nrofHosts = 69
 CCNApplicationReport.flTotalNodes = 69
 Relay.flTotalNodes = 69
 Group3.nrofHosts = 30
+Relay.avaCache = 0,1
+Relay.useUFCR = true

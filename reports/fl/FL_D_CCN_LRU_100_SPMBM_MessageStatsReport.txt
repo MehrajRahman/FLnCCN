@@ -1,0 +1,20 @@
+Message stats for scenario FL_D_CCN_LRU_100_SPMBM
+sim_time: 14400.0000
+created: 2590
+started: 45038
+relayed: 45038
+aborted: 0
+dropped: 0
+removed: 0
+delivered: 1990
+delivery_prob: 0.7683
+response_prob: 0.0000
+overhead_ratio: 21.6322
+latency_avg: 1048.4503
+latency_med: 747.5000
+hopcount_avg: 3.8266
+hopcount_med: 3
+buffertime_avg: NaN
+buffertime_med: NaN
+rtt_avg: NaN
+rtt_med: NaN

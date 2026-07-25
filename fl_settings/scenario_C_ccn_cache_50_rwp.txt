@@ -5,3 +5,5 @@ Group.router = CCNRouter
 Group.movementModel = RandomWaypoint
 Aggregator.avaCache = 0,1
 FLWorker.avaCache = 1,1
+Relay.avaCache = 0,1
+Relay.useUFCR = true

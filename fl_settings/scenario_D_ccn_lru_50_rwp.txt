@@ -1,0 +1,13 @@
+## Scenario D — CCN with plain LRU cache (no UFCR), 50 nodes, Random Waypoint
+## This is the critical baseline that isolates the contribution of UFCR.
+## Identical to Scenario C except useUFCR = false → relay nodes evict by plain LRU,
+## with no FL-semantic awareness (no P_request, P_deliver, Freshness, or Aggregation Need scoring).
+Scenario.name = FL_D_CCN_LRU_50_RWP
+
+Group.router = CCNRouter
+Group.movementModel = RandomWaypoint
+Aggregator.avaCache = 0,1
+FLWorker.avaCache = 1,1
+Relay.avaCache = 0,1
+## Disable UFCR — use plain LRU eviction for the opportunistic cache
+Relay.useUFCR = false

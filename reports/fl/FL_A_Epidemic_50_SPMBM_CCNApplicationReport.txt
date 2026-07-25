@@ -1,0 +1,34 @@
+WebApp stats for scenario FL_A_Epidemic_50_SPMBM
+sim_time: 14400.0000
+
+oppo_cache_hit: 316
+oppo_cache_miss: 4652
+drop_list:  0
+drop_pit:  499
+drop_nonce:  0
+query_count: 347
+duplicated_query: 0
+static_cache_hit: 335
+static_cache_miss: 11035
+response_count: 204
+average_interval: 2008
+caching_gain_index: 76.14
+retrieval_latency_reduction: 12.21
+interest_satisfaction_rate: 75.00
+dissemination_efficiency: 0.000293
+total_fl_cache_hits: 316
+useful_fl_cache_hits: 0
+useful_fl_cache_hit_ratio: 0.0000
+
+=== FL Per-Round Metrics ===
+round,updates_collected,completion_lat_s,useful_cache_hits,total_cache_hits,useful_cache_hit_ratio,cache_served_frac,cache_lat_s,origin_lat_s
+1,17,2205.6,0,70,0.000,0.000,-1.0,645.5
+2,13,1396.1,0,54,0.000,0.000,-1.0,539.9
+3,11,1911.9,0,43,0.000,0.000,-1.0,954.3
+4,11,2189.3,0,10,0.000,0.000,-1.0,641.6
+5,11,2399.4,0,50,0.000,0.000,-1.0,423.4
+6,11,1820.0,0,48,0.000,0.000,-1.0,741.9
+7,16,1052.0,0,21,0.000,0.000,-1.0,582.0
+8,0,-1.0,0,0,0.000,0.000,-1.0,163.5
+9,0,-1.0,0,0,0.000,0.000,-1.0,-1.0
+10,0,-1.0,0,0,0.000,0.000,-1.0,-1.0
