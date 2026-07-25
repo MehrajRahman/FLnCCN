@@ -82,10 +82,67 @@ EXPERIMENTS = [
     },
     {
         "name":       "FL_C_CCN_Cache_50_SPMBM",
-        "label":      "Scenario C | CCN-Cache  | SPMBM",
+        "label":      "Scenario C | CCN-Cache  | SPMBM | 50",
         "cmd":        "./one.sh -b 1 fl_settings/fl_base_50.txt fl_settings/scenario_C_ccn_cache_50_spmbm.txt",
         "app_report": "reports/fl/FL_C_CCN_Cache_50_SPMBM_CCNApplicationReport.txt",
         "msg_report": "reports/fl/FL_C_CCN_Cache_50_SPMBM_MessageStatsReport.txt",
+    },
+    # ── 100-Node Density Matrix ───────────────────────────────
+    {
+        "name":       "FL_A_Epidemic_100_RWP",
+        "label":      "Scenario A | Epidemic | RWP | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_A_epidemic_100_rwp.txt",
+        "app_report": "reports/fl/FL_A_Epidemic_100_RWP_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_A_Epidemic_100_RWP_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_A_Epidemic_100_SPMBM",
+        "label":      "Scenario A | Epidemic | SPMBM | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_A_epidemic_100_spmbm.txt",
+        "app_report": "reports/fl/FL_A_Epidemic_100_SPMBM_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_A_Epidemic_100_SPMBM_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_B_CCN_NoCache_100_RWP",
+        "label":      "Scenario B | CCN-NoCache | RWP | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_B_ccn_nocache_100_rwp.txt",
+        "app_report": "reports/fl/FL_B_CCN_NoCache_100_RWP_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_B_CCN_NoCache_100_RWP_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_B_CCN_NoCache_100_SPMBM",
+        "label":      "Scenario B | CCN-NoCache | SPMBM | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_B_ccn_nocache_100_spmbm.txt",
+        "app_report": "reports/fl/FL_B_CCN_NoCache_100_SPMBM_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_B_CCN_NoCache_100_SPMBM_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_D_CCN_LRU_100_RWP",
+        "label":      "Scenario D | CCN-LRU    | RWP | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_D_ccn_lru_100_rwp.txt",
+        "app_report": "reports/fl/FL_D_CCN_LRU_100_RWP_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_D_CCN_LRU_100_RWP_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_D_CCN_LRU_100_SPMBM",
+        "label":      "Scenario D | CCN-LRU    | SPMBM | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_D_ccn_lru_100_spmbm.txt",
+        "app_report": "reports/fl/FL_D_CCN_LRU_100_SPMBM_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_D_CCN_LRU_100_SPMBM_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_C_CCN_Cache_100_RWP",
+        "label":      "Scenario C | CCN-Cache  | RWP | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_C_ccn_cache_100_rwp.txt",
+        "app_report": "reports/fl/FL_C_CCN_Cache_100_RWP_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_C_CCN_Cache_100_RWP_MessageStatsReport.txt",
+    },
+    {
+        "name":       "FL_C_CCN_Cache_100_SPMBM",
+        "label":      "Scenario C | CCN-Cache  | SPMBM | 100",
+        "cmd":        "./one.sh -b 1 fl_settings/fl_base_100.txt fl_settings/scenario_C_ccn_cache_100_spmbm.txt",
+        "app_report": "reports/fl/FL_C_CCN_Cache_100_SPMBM_CCNApplicationReport.txt",
+        "msg_report": "reports/fl/FL_C_CCN_Cache_100_SPMBM_MessageStatsReport.txt",
     },
 ]
 
@@ -301,21 +358,22 @@ def parse_message_report(filepath):
 def build_results_table():
     """Parse all reports and return a Markdown table string."""
     header = (
-        "| Scenario | Protocol | Mobility | Rounds | Total Updates | "
+        "| Scenario | Protocol | Mobility | Nodes | Rounds | Total Updates | "
         "Avg Round Latency (s) | Cache-Served Frac | Cache Lat (s) | Origin Lat (s) | "
         "Oppo Cache Hits | Total FL Cache Hits | Caching Gain Index | "
         "Useful FL Hits | Useful FL Hit Ratio | "
         "Delivery Prob | Overhead Ratio |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
     )
     rows = [header]
 
     for exp in EXPERIMENTS:
-        # Parse label into columns: "Scenario X | Protocol | Mobility"
+        # Parse label into columns: "Scenario X | Protocol | Mobility | Nodes"
         parts    = exp["label"].split("|")
         scenario = parts[0].strip()
         protocol = parts[1].strip()
         mobility = parts[2].strip()
+        nodes    = parts[3].strip() if len(parts) > 3 else "50"
 
         app = parse_application_report(exp["app_report"])
         msg = parse_message_report(exp["msg_report"])
@@ -344,7 +402,7 @@ def build_results_table():
         over_str       = f"{overhead:.4f}"   if isinstance(overhead,   float) else overhead
 
         rows.append(
-            f"| {scenario} | {protocol} | {mobility} | {rounds} | {updates} | "
+            f"| {scenario} | {protocol} | {mobility} | {nodes} | {rounds} | {updates} | "
             f"{lat_str} | {cache_frac_str} | {cache_lat_str} | {origin_lat_str} | "
             f"{oppo_hits} | {total_fl_ch} | {gain_str} | "
             f"{u_hits} | {u_ratio_str} | {deliv_str} | {over_str} |"

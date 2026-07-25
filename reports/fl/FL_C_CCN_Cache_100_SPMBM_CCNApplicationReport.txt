@@ -1,0 +1,34 @@
+WebApp stats for scenario FL_C_CCN_Cache_100_SPMBM
+sim_time: 14400.0000
+
+oppo_cache_hit: 1079
+oppo_cache_miss: 29283
+drop_list:  0
+drop_pit:  110
+drop_nonce:  0
+query_count: 726
+duplicated_query: 0
+static_cache_hit: 636
+static_cache_miss: 20925
+response_count: 487
+average_interval: 2131
+caching_gain_index: 77.88
+retrieval_latency_reduction: -4.11
+interest_satisfaction_rate: 70.58
+dissemination_efficiency: 0.000315
+total_fl_cache_hits: 1071
+useful_fl_cache_hits: 33
+useful_fl_cache_hit_ratio: 0.0308
+
+=== FL Per-Round Metrics ===
+round,updates_collected,completion_lat_s,useful_cache_hits,total_cache_hits,useful_cache_hit_ratio,cache_served_frac,cache_lat_s,origin_lat_s
+1,35,2347.0,7,74,0.095,0.200,1159.3,1099.3
+2,21,1632.7,2,125,0.016,0.095,1066.1,633.4
+3,21,1574.2,6,90,0.067,0.286,1183.3,1010.7
+4,25,1180.6,0,95,0.000,0.000,-1.0,303.5
+5,21,1609.3,0,144,0.000,0.000,-1.0,733.3
+6,21,1811.6,6,153,0.039,0.286,1377.6,957.0
+7,21,1354.4,5,120,0.042,0.238,997.3,447.7
+8,21,1310.4,2,131,0.015,0.095,1237.5,703.2
+9,21,1499.5,5,127,0.039,0.238,1052.5,721.0
+10,0,-1.0,0,0,0.000,0.000,-1.0,0.2
